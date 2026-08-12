@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Верификация источника — AUTHENT/C</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M15 6h2v9h9v2h-9v9h-2v-9H6v-2h9z' fill='%23ffffff'/%3E%3C/svg%3E">
+    <style>
+        :root {
+            --bg: #060607;
+            --bg-soft: #0c0d0f;
+            --text-main: #f5f5f7;
+            --text-sub: #8a8a8f;
+            --line: rgba(255,255,255,0.10);
+            --glass-bg: rgba(255,255,255,0.08);
+            --glass-border: rgba(255,255,255,0.20);
+            --glass-shadow: rgba(0,0,0,0.55);
+            --accent-glow: rgba(255,255,255,0.55);
+            --green: #4ee38a;
+            --red: #ff5c5c;
+            --toggle-icon: #f5f5f7;
+            --toggle-bg: rgba(255,255,255,0.06);
+            --modal-bg: rgba(28,28,32,0.72);
+            --modal-border: rgba(255,255,255,0.16);
+            --transition: 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        html[data-theme="light"] {
+            --bg: #f6f6f4;
+            --bg-soft: #ffffff;
+            --text-main: #131315;
+            --text-sub: #6c6c72;
+            --line: rgba(0,0,0,0.08);
+            --glass-bg: rgba(255,255,255,0.68);
+            --glass-border: rgba(0,0,0,0.12);
+            --glass-shadow: rgba(0,0,0,0.14);
+            --accent-glow: rgba(0,0,0,0.35);
+            --toggle-icon: #131315;
+            --toggle-bg: rgba(0,0,0,0.05);
+            --modal-bg: rgba(255,255,255,0.82);
+            --modal-border: rgba(0,0,0,0.10);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            min-height: 100dvh;
+            background: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+            color: var(--text-main);
+        }
+
+        /* subtle ambient background texture */
+        .ambient {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse 800px 500px at 50% 20%, var(--glass-bg), transparent 60%);
+            opacity: 0.6;
+            transition: opacity var(--transition);
+            z-index: 0;
+        }
+
+        /* top-right glowing mark */
+        .mark {
+            position: fixed;
+            top: 36px;
+            right: 44px;
+            font-size: 15px;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            color: var(--text-main);
+            text-shadow: 0 0 12px var(--accent-glow), 0 0 28px var(--accent-glow);
+            user-select: none;
+            z-index: 5;
+            animation: markPulse 4.5s ease-in-out infinite;
+        }
+
+        @keyframes markPulse {
+            0%, 100% {
+                text-shadow: 0 0 10px var(--accent-glow), 0 0 22px var(--accent-glow);
+                opacity: 0.9;
+            }
+
+            50% {
+                text-shadow: 0 0 16px var(--accent-glow), 0 0 38px var(--accent-glow);
+                opacity: 1;
+            }
+        }
+
+        main {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 560px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 14px 0;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--text-main);
+        }
+
+        p.sub {
+            margin: 0 0 44px 0;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: var(--text-sub);
+            max-width: 400px;
+            font-family: "SF Mono", "Roboto Mono", Consolas, monospace;
+            letter-spacing: 0.005em;
+        }
+
+        /* search row */
+        .search-wrap {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .vk-label {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+
+        .glass-input {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            border-radius: 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(18px) saturate(140%);
+            -webkit-backdrop-filter: blur(18px) saturate(140%);
+            box-shadow: 0 8px 24px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+            padding: 2px;
+            transition: box-shadow var(--transition), border-color var(--transition);
+        }
+
+            .glass-input.state-valid {
+                border-color: rgba(78, 227, 138, 0.55);
+                box-shadow: 0 0 0 1px rgba(78, 227, 138, 0.25), 0 0 26px rgba(78, 227, 138, 0.28), 0 8px 24px var(--glass-shadow);
+            }
+
+            .glass-input.state-invalid {
+                border-color: rgba(255, 92, 92, 0.55);
+                box-shadow: 0 0 0 1px rgba(255, 92, 92, 0.25), 0 0 26px rgba(255, 92, 92, 0.28), 0 8px 24px var(--glass-shadow);
+            }
+
+            .glass-input input {
+                width: 100%;
+                background: transparent;
+                border: none;
+                outline: none;
+                color: var(--text-main);
+                font-size: 16px;
+                padding: 15px 18px;
+                letter-spacing: 0.02em;
+                font-family: inherit;
+                -webkit-appearance: none;
+                appearance: none;
+            }
+
+                .glass-input input::placeholder {
+                    color: var(--text-sub);
+                    opacity: 0.7;
+                }
+
+        /* theme toggle */
+        .theme-toggle {
+            position: fixed;
+            left: 32px;
+            bottom: 32px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            cursor: pointer;
+            z-index: 50;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: background var(--transition), border-color var(--transition), transform 0.2s ease;
+        }
+
+            .theme-toggle:hover {
+                transform: translateY(-2px);
+            }
+
+            .theme-toggle:active {
+                transform: translateY(0px) scale(0.94);
+            }
+
+            .theme-toggle svg {
+                width: 19px;
+                height: 19px;
+                stroke: var(--toggle-icon);
+                transition: stroke var(--transition);
+            }
+
+        .icon-sun {
+            display: none;
+        }
+
+        html[data-theme="light"] .icon-moon {
+            display: none;
+        }
+
+        html[data-theme="light"] .icon-sun {
+            display: block;
+        }
+
+        /* modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 20;
+        }
+
+        html[data-theme="light"] .modal-overlay {
+            background: rgba(0,0,0,0.12);
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--modal-bg);
+            border: 1px solid var(--modal-border);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border-radius: 20px;
+            padding: 36px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            max-width: 340px;
+            box-shadow: 0 20px 60px var(--glass-shadow);
+            transform: scale(0.92) translateY(10px);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .modal-overlay.open .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .modal-icon.ok {
+                background: rgba(78, 227, 138, 0.12);
+                box-shadow: 0 0 0 1px rgba(78, 227, 138, 0.3);
+            }
+
+            .modal-icon.fail {
+                background: rgba(255, 92, 92, 0.12);
+                box-shadow: 0 0 0 1px rgba(255, 92, 92, 0.3);
+            }
+
+            .modal-icon svg {
+                width: 26px;
+                height: 26px;
+            }
+
+        .modal-text {
+            font-size: 14px;
+            line-height: 1.55;
+            color: var(--text-main);
+            text-align: center;
+            font-weight: 500;
+        }
+
+            .modal-text b {
+                font-weight: 700;
+            }
+
+        @media (max-width: 480px) {
+            .mark {
+                top: 24px;
+                right: 24px;
+                font-size: 13px;
+            }
+
+            h1 {
+                font-size: 21px;
+            }
+
+            p.sub {
+                font-size: 12.5px;
+            }
+
+            .theme-toggle {
+                left: 20px;
+                bottom: 20px;
+            }
+
+            main {
+                padding: 24px;
+            }
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--text-main);
+            outline-offset: 3px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient"></div>
+    <div class="mark">I I</div>
+
+    <main>
+        <h1>Верификация AUTHENT/C</h1>
+        <p class="sub">На этой странице вы можете проверить, являяется ли аккаунт в социальной сети VK, проверенным официальным источником AUTHENT/C. Это поможет вам избежать потери ваших средств по причинам связанным с фишингом и онлайн-мошенничеством.</p>
+
+        <form class="search-wrap" id="searchForm" autocomplete="off">
+            <span class="vk-label">VK</span>
+            <div class="glass-input" id="glassInput">
+                <input type="text" id="searchInput" name="query" placeholder="Введите id аккаунта начинащийся с @…" autocomplete="off" inputmode="text" enterkeyhint="search">
+            </div>
+        </form>
+    </main>
+
+    <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4.2"></circle>
+            <path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.5 1.5M18.3 18.3l1.5 1.5M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.5-1.5M18.3 5.7l1.5-1.5"></path>
+        </svg>
+    </button>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-icon" id="modalIcon">
+                <!-- filled by JS -->
+            </div>
+            <div class="modal-text" id="modalText"></div>
+        </div>
+    </div>
+
+    <script>
+        // ---- Theme handling ----
+        const root = document.documentElement;
+        const themeToggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('authentc-theme') || 'dark';
+        root.setAttribute('data-theme', savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const current = root.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', next);
+            localStorage.setItem('authentc-theme', next);
+        });
+
+        // ---- Stock check logic ----
+        const STOCK = new Set(['@ait_ll', '@at_ll']);
+
+        const form = document.getElementById('searchForm');
+        const input = document.getElementById('searchInput');
+        const glassInput = document.getElementById('glassInput');
+        const overlay = document.getElementById('modalOverlay');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalText = document.getElementById('modalText');
+
+        const ICON_OK = `<svg viewBox="0 0 24 24" fill="none" stroke="#4ee38a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>`;
+        const ICON_FAIL = `<svg viewBox="0 0 24 24" fill="none" stroke="#ff5c5c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>`;
+
+        let debounceTimer = null;
+        let lastChecked = '';
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function clearGlow() {
+            glassInput.classList.remove('state-valid', 'state-invalid');
+        }
+
+        function runCheck() {
+            const value = input.value.trim();
+            if (!value) { clearGlow(); return; }
+            if (value === lastChecked && overlay.classList.contains('open')) return;
+            lastChecked = value;
+
+            const found = STOCK.has(value);
+            clearGlow();
+            glassInput.classList.add(found ? 'state-valid' : 'state-invalid');
+            showModal(found, value);
+        }
+
+        function showModal(found, value) {
+            modalIcon.className = 'modal-icon ' + (found ? 'ok' : 'fail');
+            modalIcon.innerHTML = found ? ICON_OK : ICON_FAIL;
+            modalText.innerHTML = found
+                ? `Проверенный официальный источник AUTHENT/C. Ваш запрос «<b>${escapeHtml(value)}</b>» является проверенным официальным источником AUTHENT/C.`
+                : `Непроверенный источник! Ваш запрос «<b>${escapeHtml(value)}</b>» не является проверенным официальным источником AUTHENT/C.`;
+            overlay.classList.add('open');
+        }
+
+        function hideModal() {
+            overlay.classList.remove('open');
+        }
+
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            lastChecked = '';
+            if (!input.value.trim()) { clearGlow(); return; }
+            debounceTimer = setTimeout(runCheck, 2000);
+        });
+
+        // Handles Enter on desktop keyboards and "Go/Search" on mobile virtual keyboards
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            clearTimeout(debounceTimer);
+            runCheck();
+            input.blur();
+        });
+
+        // Fallback: some mobile browsers close the keyboard without firing submit
+        input.addEventListener('blur', () => {
+            clearTimeout(debounceTimer);
+            if (input.value.trim()) runCheck();
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) hideModal();
+        });
+        overlay.addEventListener('touchend', (e) => {
+            if (e.target === overlay) hideModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hideModal();
+        });
+
+        // Ensure the theme toggle responds reliably on touch devices
+        themeToggle.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            themeToggle.click();
+        }, { passive: false });
+    </script>
+</body>
+</html>
