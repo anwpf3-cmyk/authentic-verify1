@@ -401,7 +401,7 @@
         </div>
     </div>
 
-        <script>
+    <script>
         // ---- Theme handling ----
         const root = document.documentElement;
         const themeToggle = document.getElementById('themeToggle');
@@ -428,7 +428,7 @@
         const ICON_OK = `<svg viewBox="0 0 24 24" fill="none" stroke="#4ee38a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>`;
         const ICON_FAIL = `<svg viewBox="0 0 24 24" fill="none" stroke="#ff5c5c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>`;
 
-        let debounceTimer = null;
+        let previousValue = "";
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -441,12 +441,14 @@
         }
 
         function runCheck(force = false) {
-            let value = input.value.trim().toLowerCase();
+            let origValue = input.value;
+            let value = origValue.trim().toLowerCase();
             if (!value) { clearGlow(); return; }
 
-            if (!value.startsWith('@')) {
+            // Если пользователь начал писать буквы без собаки, ЖЕСТКО подставляем @ прямо в процессе
+            if (value.length > 0 && !value.startsWith('@')) {
                 value = '@' + value;
-                input.value = value;
+                input.value = value; 
             }
 
             const found = STOCK.has(value);
@@ -455,12 +457,12 @@
                 clearGlow();
                 glassInput.classList.add('state-valid');
                 showModal(true, value);
-                input.blur();
-            } 
-            else if (force) {
+                input.blur(); // Прячем клавиатуру
+            } else if (force) {
                 clearGlow();
                 glassInput.classList.add('state-invalid');
                 showModal(false, value);
+                input.blur();
             }
         }
 
@@ -476,27 +478,40 @@
         function hideModal() {
             overlay.classList.remove('open');
             clearGlow();
+            input.value = ""; // Очищаем поле при закрытии окна
+            previousValue = "";
         }
 
-        input.addEventListener('input', () => {
-            clearTimeout(debounceTimer);
-            if (!input.value.trim()) { clearGlow(); return; }
-            runCheck(false); 
+        // ЖЕСТКИЙ ХАК ДЛЯ IOS/VK: Проверяем текст по таймеру каждые 100мс (работает всегда)
+        setInterval(() => {
+            let currentTrimmed = input.value.trim().toLowerCase();
+            if (currentTrimmed !== previousValue) {
+                previousValue = currentTrimmed;
+                if (!currentTrimmed) { clearGlow(); return; }
+                runCheck(false); // Проверяем "на лету" без принудительной ошибки
+            }
+        }, 100);
+
+        // Перехват нажатия любых клавиш (для мгновенной вставки @ на iOS)
+        input.addEventListener('keyup', () => {
+            runCheck(false);
         });
 
+        // Срабатывает при клике на кнопку "Поиск" или "Перейти" на клавиатуре iPhone
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            clearTimeout(debounceTimer);
-            runCheck(true);
+            runCheck(true); // Силой выводим окно (даже если ошибка)
         });
 
-        input.addEventListener('blur', () => {
-            clearTimeout(debounceTimer);
-            if (input.value.trim()) {
-                setTimeout(() => { runCheck(true); }, 150);
+        // Дополнительный перехват кнопки Enter
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                runCheck(true);
             }
         });
 
+        // Закрытие окон
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) hideModal();
         });
