@@ -401,7 +401,7 @@
         </div>
     </div>
 
-    <script>
+        <script>
         // ---- Theme handling ----
         const root = document.documentElement;
         const themeToggle = document.getElementById('themeToggle');
@@ -429,7 +429,6 @@
         const ICON_FAIL = `<svg viewBox="0 0 24 24" fill="none" stroke="#ff5c5c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>`;
 
         let debounceTimer = null;
-        let lastChecked = '';
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -441,16 +440,28 @@
             glassInput.classList.remove('state-valid', 'state-invalid');
         }
 
-        function runCheck() {
-            const value = input.value.trim();
+        function runCheck(force = false) {
+            let value = input.value.trim().toLowerCase();
             if (!value) { clearGlow(); return; }
-            if (value === lastChecked && overlay.classList.contains('open')) return;
-            lastChecked = value;
+
+            if (!value.startsWith('@')) {
+                value = '@' + value;
+                input.value = value;
+            }
 
             const found = STOCK.has(value);
-            clearGlow();
-            glassInput.classList.add(found ? 'state-valid' : 'state-invalid');
-            showModal(found, value);
+
+            if (found) {
+                clearGlow();
+                glassInput.classList.add('state-valid');
+                showModal(true, value);
+                input.blur();
+            } 
+            else if (force) {
+                clearGlow();
+                glassInput.classList.add('state-invalid');
+                showModal(false, value);
+            }
         }
 
         function showModal(found, value) {
@@ -464,27 +475,26 @@
 
         function hideModal() {
             overlay.classList.remove('open');
+            clearGlow();
         }
 
         input.addEventListener('input', () => {
             clearTimeout(debounceTimer);
-            lastChecked = '';
             if (!input.value.trim()) { clearGlow(); return; }
-            debounceTimer = setTimeout(runCheck, 2000);
+            runCheck(false); 
         });
 
-        // Handles Enter on desktop keyboards and "Go/Search" on mobile virtual keyboards
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             clearTimeout(debounceTimer);
-            runCheck();
-            input.blur();
+            runCheck(true);
         });
 
-        // Fallback: some mobile browsers close the keyboard without firing submit
         input.addEventListener('blur', () => {
             clearTimeout(debounceTimer);
-            if (input.value.trim()) runCheck();
+            if (input.value.trim()) {
+                setTimeout(() => { runCheck(true); }, 150);
+            }
         });
 
         overlay.addEventListener('click', (e) => {
@@ -498,7 +508,6 @@
             if (e.key === 'Escape') hideModal();
         });
 
-        // Ensure the theme toggle responds reliably on touch devices
         themeToggle.addEventListener('touchend', (e) => {
             e.preventDefault();
             themeToggle.click();
