@@ -374,12 +374,14 @@
         </h1>
         <p class="sub" style="text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">На этой странице вы можете проверить, является ли аккаунт в социальной сети VK, проверенным официальным источником компании<br>ООО&nbsp;«Я&nbsp;ТЕБЯ&nbsp;НИКОГДА&nbsp;НЕ&nbsp;ПРЕДАМ.&nbsp;3». Это поможет вам избежать потери ваших средств по причинам, связанным с фишингом и онлайн-мошенничеством.</p>
 
-        <form class="search-wrap" id="searchForm" autocomplete="off">
+        <form class="search-wrap" id="searchForm" autocomplete="off" onsubmit="event.preventDefault(); runCheck(true); return false;">
             <span class="vk-label">VK</span>
-            <div class="glass-input" id="glassInput">
-                <input type="text" id="searchInput" name="query" placeholder="Введите id аккаунта начинащийся с @…" autocomplete="off" inputmode="text" enterkeyhint="search">
+            <div class="glass-input" id="glassInput" style="display: flex; align-items: center; width: 100%;">
+                <input type="text" id="searchInput" name="query" placeholder="Введите id аккаунта…" autocomplete="off" inputmode="text" enterkeyhint="search" style="flex: 1;">
+                <button type="button" id="checkButton" style="background: var(--text-main); color: var(--bg); border: none; padding: 10px 16px; margin-right: 6px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 14px; -webkit-tap-highlight-color: transparent;">Проверить</button>
             </div>
         </form>
+
     </main>
 
     <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
@@ -421,6 +423,7 @@
         const form = document.getElementById('searchForm');
         const input = document.getElementById('searchInput');
         const glassInput = document.getElementById('glassInput');
+        const checkButton = document.getElementById('checkButton');
         const overlay = document.getElementById('modalOverlay');
         const modalIcon = document.getElementById('modalIcon');
         const modalText = document.getElementById('modalText');
@@ -441,11 +444,10 @@
         }
 
         function runCheck(force = false) {
-            let origValue = input.value;
-            let value = origValue.trim().toLowerCase();
+            let value = input.value.trim().toLowerCase();
             if (!value) { clearGlow(); return; }
 
-            // Если пользователь начал писать буквы без собаки, ЖЕСТКО подставляем @ прямо в процессе
+            // Если пользователь пишет без @ — подставляем её автоматически
             if (value.length > 0 && !value.startsWith('@')) {
                 value = '@' + value;
                 input.value = value; 
@@ -457,12 +459,12 @@
                 clearGlow();
                 glassInput.classList.add('state-valid');
                 showModal(true, value);
-                input.blur(); // Прячем клавиатуру
+                setTimeout(() => { input.blur(); }, 50); // Мягко скрываем клавиатуру на iOS
             } else if (force) {
                 clearGlow();
                 glassInput.classList.add('state-invalid');
                 showModal(false, value);
-                input.blur();
+                setTimeout(() => { input.blur(); }, 50);
             }
         }
 
@@ -478,32 +480,40 @@
         function hideModal() {
             overlay.classList.remove('open');
             clearGlow();
-            input.value = ""; // Очищаем поле при закрытии окна
+            input.value = ""; 
             previousValue = "";
         }
 
-        // ЖЕСТКИЙ ХАК ДЛЯ IOS/VK: Проверяем текст по таймеру каждые 100мс (работает всегда)
+        // Клик по новой кнопке "Проверить"
+        checkButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runCheck(true);
+        });
+        
+        // Для сенсорных экранов iOS
+        checkButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            runCheck(true);
+        });
+
+        // Посекундный мониторинг текста (для автоподстановки @ на ходу)
         setInterval(() => {
             let currentTrimmed = input.value.trim().toLowerCase();
             if (currentTrimmed !== previousValue) {
                 previousValue = currentTrimmed;
                 if (!currentTrimmed) { clearGlow(); return; }
-                runCheck(false); // Проверяем "на лету" без принудительной ошибки
+                runCheck(false); 
             }
         }, 100);
 
-        // Перехват нажатия любых клавиш (для мгновенной вставки @ на iOS)
-        input.addEventListener('keyup', () => {
-            runCheck(false);
-        });
-
-        // Срабатывает при клике на кнопку "Поиск" или "Перейти" на клавиатуре iPhone
+        // Блокировка стандартного сабмита лупы
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            runCheck(true); // Силой выводим окно (даже если ошибка)
+            runCheck(true);
         });
 
-        // Дополнительный перехват кнопки Enter
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
