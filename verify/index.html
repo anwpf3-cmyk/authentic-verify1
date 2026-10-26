@@ -374,14 +374,12 @@
         </h1>
         <p class="sub" style="text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">На этой странице вы можете проверить, является ли аккаунт в социальной сети VK, проверенным официальным источником компании<br>ООО&nbsp;«Я&nbsp;ТЕБЯ&nbsp;НИКОГДА&nbsp;НЕ&nbsp;ПРЕДАМ.&nbsp;3». Это поможет вам избежать потери ваших средств по причинам, связанным с фишингом и онлайн-мошенничеством.</p>
 
-        <form class="search-wrap" id="searchForm" autocomplete="off" onsubmit="event.preventDefault(); runCheck(true); return false;">
+        <form class="search-wrap" id="searchForm" autocomplete="off">
             <span class="vk-label">VK</span>
-            <div class="glass-input" id="glassInput" style="display: flex; align-items: center; width: 100%;">
-                <input type="text" id="searchInput" name="query" placeholder="Введите id аккаунта…" autocomplete="off" inputmode="text" enterkeyhint="search" style="flex: 1;">
-                <button type="button" id="checkButton" style="background: var(--text-main); color: var(--bg); border: none; padding: 10px 16px; margin-right: 6px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 14px; -webkit-tap-highlight-color: transparent;">Проверить</button>
+            <div class="glass-input" id="glassInput">
+                <input type="text" id="searchInput" name="query" placeholder="Введите id аккаунта начинащийся с @…" autocomplete="off" inputmode="text" enterkeyhint="search">
             </div>
         </form>
-
     </main>
 
     <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
@@ -403,7 +401,7 @@
         </div>
     </div>
 
-    <script>
+        <script>
         // ---- Theme handling ----
         const root = document.documentElement;
         const themeToggle = document.getElementById('themeToggle');
@@ -423,7 +421,6 @@
         const form = document.getElementById('searchForm');
         const input = document.getElementById('searchInput');
         const glassInput = document.getElementById('glassInput');
-        const checkButton = document.getElementById('checkButton');
         const overlay = document.getElementById('modalOverlay');
         const modalIcon = document.getElementById('modalIcon');
         const modalText = document.getElementById('modalText');
@@ -431,7 +428,7 @@
         const ICON_OK = `<svg viewBox="0 0 24 24" fill="none" stroke="#4ee38a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>`;
         const ICON_FAIL = `<svg viewBox="0 0 24 24" fill="none" stroke="#ff5c5c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>`;
 
-        let previousValue = "";
+        let debounceTimer = null;
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -447,10 +444,9 @@
             let value = input.value.trim().toLowerCase();
             if (!value) { clearGlow(); return; }
 
-            // Если пользователь пишет без @ — подставляем её автоматически
-            if (value.length > 0 && !value.startsWith('@')) {
+            if (!value.startsWith('@')) {
                 value = '@' + value;
-                input.value = value; 
+                input.value = value;
             }
 
             const found = STOCK.has(value);
@@ -459,12 +455,12 @@
                 clearGlow();
                 glassInput.classList.add('state-valid');
                 showModal(true, value);
-                setTimeout(() => { input.blur(); }, 50); // Мягко скрываем клавиатуру на iOS
-            } else if (force) {
+                input.blur();
+            } 
+            else if (force) {
                 clearGlow();
                 glassInput.classList.add('state-invalid');
                 showModal(false, value);
-                setTimeout(() => { input.blur(); }, 50);
             }
         }
 
@@ -480,48 +476,27 @@
         function hideModal() {
             overlay.classList.remove('open');
             clearGlow();
-            input.value = ""; 
-            previousValue = "";
         }
 
-        // Клик по новой кнопке "Проверить"
-        checkButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            runCheck(true);
-        });
-        
-        // Для сенсорных экранов iOS
-        checkButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            runCheck(true);
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            if (!input.value.trim()) { clearGlow(); return; }
+            runCheck(false); 
         });
 
-        // Посекундный мониторинг текста (для автоподстановки @ на ходу)
-        setInterval(() => {
-            let currentTrimmed = input.value.trim().toLowerCase();
-            if (currentTrimmed !== previousValue) {
-                previousValue = currentTrimmed;
-                if (!currentTrimmed) { clearGlow(); return; }
-                runCheck(false); 
-            }
-        }, 100);
-
-        // Блокировка стандартного сабмита лупы
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            clearTimeout(debounceTimer);
             runCheck(true);
         });
 
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                runCheck(true);
+        input.addEventListener('blur', () => {
+            clearTimeout(debounceTimer);
+            if (input.value.trim()) {
+                setTimeout(() => { runCheck(true); }, 150);
             }
         });
 
-        // Закрытие окон
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) hideModal();
         });
