@@ -1,0 +1,166 @@
+/* Общие настройки страницы */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #121214;
+    color: #ffffff;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Макет: Таблица слева, инфо-панель справа */
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+.table-container {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+h1 {
+    margin-bottom: 25px;
+    font-size: 24px;
+    font-weight: 400;
+}
+
+/* Сетка таблицы Менделеева (18 колонок) */
+.periodic-table {
+    display: grid;
+    grid-template-columns: repeat(18, minmax(60px, 1fr));
+    gap: 6px;
+    padding-right: 20px;
+}
+
+/* Стили карточки элемента */
+.element {
+    background-color: #202124;
+    border: 1px solid #3c4043;
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.element:hover {
+    transform: scale(1.05);
+    border-color: #fff;
+    box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+    z-index: 10;
+}
+
+.num { font-size: 10px; color: #aaa; }
+.symbol { font-size: 18px; font-weight: bold; margin: 4px 0; }
+.name { font-size: 11px; color: #ccc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Цветовые группы элементов */
+.reactive-nonmetal { border-left: 4px solid #34a853; }
+.noble-gas { border-left: 4px solid #9c27b0; }
+.alkali-metal { border-left: 4px solid #ea4335; }
+.alkaline-earth { border-left: 4px solid #fbbc05; }
+
+/* Правая панель */
+.sidebar {
+    width: 380px;
+    background-color: #1e1f22;
+    border-left: 1px solid #2d2f34;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.3);
+}
+
+.badge {
+    display: inline-block;
+    background: #3c4043;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-top: 8px;
+    margin-bottom: 20px;
+}
+
+.info-scroll {
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.info-scroll p { margin-bottom: 8px; }
+hr { border: 0; border-top: 1px solid #3c4043; margin: 15px 0; }
+.hidden { display: none !important; }
+
+/* 🪐 КРАСИВАЯ АНИМАЦИЯ АТОМА (CSS 3D-эффект) */
+.atom-animation {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 30px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 400px;
+}
+
+/* Ядро атома */
+.nucleus {
+    width: 24px;
+    height: 24px;
+    background: radial-gradient(circle, #ff4757, #ff6b81);
+    border-radius: 50%;
+    box-shadow: 0 0 15px #ff4757;
+}
+
+/* Орбиты электронов */
+.orbit {
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+.orbit-1 {
+    width: 120px;
+    height: 120px;
+    transform: rotateX(70deg) rotateY(20deg);
+    animation: spin 3s linear infinite;
+}
+
+.orbit-2 {
+    width: 170px;
+    height: 170px;
+    transform: rotateX(60deg) rotateY(-30deg);
+    animation: spin 4s linear infinite reverse;
+}
+
+/* Сами электроны */
+.electron {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background-color: #00d2d3;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00d2d3;
+    transform: translateX(-50%);
+}
+
+@keyframes spin {
+    0% { transform: rotateX(70deg) rotateY(20deg) rotateZ(0deg); }
+    100% { transform: rotateX(70deg) rotateY(20deg) rotateZ(360deg); }
+}
+
+@keyframes spin-reverse {
+    0% { transform: rotateX(60deg) rotateY(-30deg) rotateZ(360deg); }
+    100% { transform: rotateX(60deg) rotateY(-30deg) rotateZ(0deg); }
+}
