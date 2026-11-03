@@ -1,166 +1,157 @@
-/* Общие настройки страницы */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
-    background-color: #121214;
-    color: #ffffff;
+    background-color: #f8f9fa; /* Светлый фирменный фон Google */
+    color: #202124;
     height: 100vh;
     overflow: hidden;
 }
 
-/* Макет: Таблица слева, инфо-панель справа */
 .app-container {
     display: flex;
     height: 100vh;
+    width: 100vw;
 }
 
+/* Левая часть */
 .table-container {
     flex: 1;
-    padding: 30px;
-    overflow-y: auto;
-}
-
-h1 {
-    margin-bottom: 25px;
-    font-size: 24px;
-    font-weight: 400;
-}
-
-/* Сетка таблицы Менделеева (18 колонок) */
-.periodic-table {
-    display: grid;
-    grid-template-columns: repeat(18, minmax(60px, 1fr));
-    gap: 6px;
-    padding-right: 20px;
-}
-
-/* Стили карточки элемента */
-.element {
-    background-color: #202124;
-    border: 1px solid #3c4043;
-    border-radius: 4px;
-    padding: 8px;
+    padding: 20px 40px;
+    overflow-auto: auto;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+}
+
+.main-title {
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 20px;
+    color: #202124;
+}
+
+/* Сетка таблицы с фиксированными пропорциями ячеек (без растягивания) */
+.periodic-table {
+    display: grid;
+    grid-template-columns: repeat(18, minmax(45px, 1fr));
+    grid-gap: 4px;
+    max-width: 1200px;
+    width: 100%;
+}
+
+/* Карточки элементов — делаем их квадратными и пропорциональными */
+.element {
+    background-color: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    aspect-ratio: 1 / 1; /* Гарантирует, что ячейки всегда будут квадратными! */
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease-in-out;
     user-select: none;
+    position: relative;
 }
 
 .element:hover {
-    transform: scale(1.05);
-    border-color: #fff;
-    box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+    transform: scale(1.12);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: #202124;
     z-index: 10;
 }
 
-.num { font-size: 10px; color: #aaa; }
-.symbol { font-size: 18px; font-weight: bold; margin: 4px 0; }
-.name { font-size: 11px; color: #ccc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Тексты внутри ячейки */
+.element .num {
+    font-size: 9px;
+    color: #70757a;
+    font-weight: 500;
+}
 
-/* Цветовые группы элементов */
-.reactive-nonmetal { border-left: 4px solid #34a853; }
-.noble-gas { border-left: 4px solid #9c27b0; }
-.alkali-metal { border-left: 4px solid #ea4335; }
-.alkaline-earth { border-left: 4px solid #fbbc05; }
+.element .symbol {
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: -2px;
+}
 
-/* Правая панель */
+.element .name {
+    font-size: 9px;
+    color: #70757a;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ЦВЕТОВЫЕ ГРУППЫ (Точь-в-точь как у Google) */
+.reactive-nonmetal { background-color: #e8f0fe; color: #1967d2; border-color: #aecbfa; }
+.noble-gas { background-color: #fce8e6; color: #c5221f; border-color: #fad2cf; }
+.alkali-metal { background-color: #fef7e0; color: #b06000; border-color: #feecb5; }
+.alkaline-earth { background-color: #feefe3; color: #b06000; border-color: #fedfc8; }
+.metalloid { background-color: #e6f4ea; color: #137333; border-color: #ceead6; }
+.post-transition { background-color: #e6f4ea; color: #137333; border-color: #ceead6; }
+.transition-metal { background-color: #f3e8fd; color: #86164d; border-color: #e9d2fd; }
+.lanthanide { background-color: #f1f3f4; color: #5f6368; border-color: #dae0e5; }
+.actinide { background-color: #f1f3f4; color: #5f6368; border-color: #dae0e5; }
+
+/* Боковая панель */
 .sidebar {
-    width: 380px;
-    background-color: #1e1f22;
-    border-left: 1px solid #2d2f34;
+    width: 400px;
+    background-color: #ffffff;
+    border-left: 1px solid #dadce0;
     padding: 30px;
     display: flex;
     flex-direction: column;
-    box-shadow: -5px 0 25px rgba(0,0,0,0.3);
+    box-shadow: -2px 0 10px rgba(0,0,0,0.02);
 }
 
 .badge {
     display: inline-block;
-    background: #3c4043;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
     margin-top: 8px;
-    margin-bottom: 20px;
+    background-color: #f1f3f4;
 }
+
+/* Стильный контейнер для реального 3D */
+#canvas-container {
+    width: 100%;
+    height: 240px;
+    margin: 25px 0;
+    background-color: #fafafa;
+    border: 1px dashed #dadce0;
+    border-radius: 8px;
+    cursor: grab;
+}
+
+#canvas-container:active { cursor: grabbing; }
 
 .info-scroll {
-    margin-top: 20px;
+    overflow-y: auto;
+    flex: 1;
     font-size: 14px;
-    line-height: 1.6;
+    color: #3c4043;
+    line-height: 1.5;
 }
 
-.info-scroll p { margin-bottom: 8px; }
-hr { border: 0; border-top: 1px solid #3c4043; margin: 15px 0; }
+.stats-grid p {
+    margin-bottom: 10px;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #dadce0;
+    margin: 15px 0;
+}
+
 .hidden { display: none !important; }
 
-/* 🪐 КРАСИВАЯ АНИМАЦИЯ АТОМА (CSS 3D-эффект) */
-.atom-animation {
-    position: relative;
-    width: 200px;
-    height: 200px;
-    margin: 30px auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    perspective: 400px;
-}
-
-/* Ядро атома */
-.nucleus {
-    width: 24px;
-    height: 24px;
-    background: radial-gradient(circle, #ff4757, #ff6b81);
-    border-radius: 50%;
-    box-shadow: 0 0 15px #ff4757;
-}
-
-/* Орбиты электронов */
-.orbit {
-    position: absolute;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-}
-
-.orbit-1 {
-    width: 120px;
-    height: 120px;
-    transform: rotateX(70deg) rotateY(20deg);
-    animation: spin 3s linear infinite;
-}
-
-.orbit-2 {
-    width: 170px;
-    height: 170px;
-    transform: rotateX(60deg) rotateY(-30deg);
-    animation: spin 4s linear infinite reverse;
-}
-
-/* Сами электроны */
-.electron {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 8px;
-    height: 8px;
-    background-color: #00d2d3;
-    border-radius: 50%;
-    box-shadow: 0 0 10px #00d2d3;
-    transform: translateX(-50%);
-}
-
-@keyframes spin {
-    0% { transform: rotateX(70deg) rotateY(20deg) rotateZ(0deg); }
-    100% { transform: rotateX(70deg) rotateY(20deg) rotateZ(360deg); }
-}
-
-@keyframes spin-reverse {
-    0% { transform: rotateX(60deg) rotateY(-30deg) rotateZ(360deg); }
-    100% { transform: rotateX(60deg) rotateY(-30deg) rotateZ(0deg); }
-}
