@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивная таблица Менделеева</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Левая часть: Таблица -->
+        <main class="table-container">
+            <h1>Периодическая система химических элементов</h1>
+            <div class="periodic-table">
+                <!-- Водород (1 колонка, 1 строка) -->
+                <div class="element reactive-nonmetal" style="grid-column: 1; grid-row: 1;" onclick="showElement('H')">
+                    <span class="num">1</span>
+                    <span class="symbol">H</span>
+                    <span class="name">Водород</span>
+                </div>
+
+                <!-- Гелий (18 колонка, 1 строка) -->
+                <div class="element noble-gas" style="grid-column: 18; grid-row: 1;" onclick="showElement('He')">
+                    <span class="num">2</span>
+                    <span class="symbol">He</span>
+                    <span class="name">Гелий</span>
+                </div>
+
+                <!-- Литий (1 колонка, 2 строка) -->
+                <div class="element alkali-metal" style="grid-column: 1; grid-row: 2;" onclick="showElement('Li')">
+                    <span class="num">3</span>
+                    <span class="symbol">Li</span>
+                    <span class="name">Литий</span>
+                </div>
+
+                <!-- Бериллий (2 колонка, 2 строка) -->
+                <div class="element alkaline-earth" style="grid-column: 2; grid-row: 2;" onclick="showElement('Be')">
+                    <span class="num">4</span>
+                    <span class="symbol">Be</span>
+                    <span class="name">Бериллий</span>
+                </div>
+
+                <!-- Углерод (14 колонка, 2 строка) -->
+                <div class="element reactive-nonmetal" style="grid-column: 14; grid-row: 2;" onclick="showElement('C')">
+                    <span class="num:">6</span>
+                    <span class="symbol">C</span>
+                    <span class="name">Углерод</span>
+                </div>
+
+                <!-- Кислород (16 колонка, 2 строка) -->
+                <div class="element reactive-nonmetal" style="grid-column: 16; grid-row: 2;" onclick="showElement('O')">
+                    <span class="num">8</span>
+                    <span class="symbol">O</span>
+                    <span class="name">Кислород</span>
+                </div>
+                
+                <!-- (Вы можете добавлять другие элементы по аналогии, указывая им нужные grid-column и grid-row) -->
+            </div>
+        </main>
+
+        <!-- Правая часть: Карточка элемента и анимация -->
+        <aside class="sidebar">
+            <div id="welcome-text">
+                <h2>Добро пожаловать!</h2>
+                <p>Нажмите на любой элемент таблицы, чтобы увидеть его трехмерную модель и характеристики.</p>
+            </div>
+
+            <div id="details-panel" class="hidden">
+                <h2 id="el-full-name">Водород (H)</h2>
+                <p id="el-category" class="badge">Активный неметалл</p>
+
+                <!-- Анимация атома (CSS модель Бора) -->
+                <div class="atom-animation">
+                    <div class="nucleus"></div>
+                    <div class="orbit orbit-1">
+                        <div class="electron"></div>
+                    </div>
+                    <div class="orbit orbit-2">
+                        <div class="electron"></div>
+                    </div>
+                </div>
+
+                <div class="info-scroll">
+                    <p id="el-desc">Самый распространенный элемент во Вселенной.</p>
+                    <hr>
+                    <p><strong>Атомная масса:</strong> <span id="el-mass">1.008 u</span></p>
+                    <p><strong>Плотность:</strong> <span id="el-density">0.07099 г/см³</span></p>
+                    <p><strong>Температура плавления:</strong> <span id="el-melt">-259.16 °C</span></p>
+                    <p><strong>Кто открыл:</strong> <span id="el-discoverer">Генри Кавендиш</span></p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script href="script.js" src="script.js"></script>
+</body>
+</html>
