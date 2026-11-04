@@ -6,6 +6,8 @@
   <title>Периодическая таблица — ООО «Я ТЕБЯ НИКОГДА НЕ ПРЕДАМ. 3»</title>
   <meta name="description" content="Интерактивная периодическая таблица химических элементов с анимированной моделью Бора.">
   <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="favicon.svg?v=3" type="image/svg+xml">
+  <link rel="icon" href="favicon.png?v=3" type="image/png" sizes="64x64">
   <script>
     /* Ставим тему до отрисовки страницы, чтобы не было мигания */
     (function () {
@@ -15,9 +17,13 @@
         t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
       document.documentElement.setAttribute('data-theme', t);
+      try {
+        var w = parseInt(localStorage.getItem('panelW'), 10);
+        if (w > 0) document.documentElement.style.setProperty('--panel-w', w + 'px');
+      } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
   <div class="app">
@@ -47,39 +53,62 @@
       </footer>
     </div>
 
-    <aside id="panel" class="panel" aria-live="polite">
-      <div id="info" class="info">
-        <h2 class="el-title"><span id="el-name"></span> <span class="el-sym">(<span id="el-sym"></span>)</span><sup id="el-z"></sup></h2>
-        <div class="el-cat"><span id="el-dot" class="dot"></span><span id="el-cat"></span></div>
+    <aside id="panel" class="panel">
+      <div id="resizer" class="resizer" role="separator" aria-orientation="vertical" tabindex="0"
+           aria-label="Ширина правой колонки" title="Потяните, чтобы изменить ширину (двойной щелчок — сбросить)"></div>
 
-        <div class="bohr">
-          <canvas id="bohr" aria-label="Анимированная модель атома по Бору" role="img"></canvas>
+      <div id="panel-body" class="panel-body" aria-live="polite">
+
+        <!-- Информация об элементе -->
+        <div id="info" class="info">
+          <h2 class="el-title"><span id="el-name"></span> <span class="el-sym">(<span id="el-sym"></span>)</span><sup id="el-z"></sup></h2>
+          <button id="el-catbtn" class="el-cat" type="button" title="Показать информацию о группе">
+            <span id="el-dot" class="dot"></span><span id="el-cat"></span>
+          </button>
+
+          <div class="bohr">
+            <canvas id="bohr" aria-label="Анимированная модель атома по Бору" role="img"></canvas>
+          </div>
+          <div class="caption">Модель Бора · перетащите, чтобы повернуть</div>
+
+          <p id="el-desc" class="desc"></p>
+
+          <dl class="props">
+            <div><dt>Символ:</dt><dd id="p-sym"></dd></div>
+            <div><dt>Атомная масса:</dt><dd id="p-mass"></dd></div>
+            <div id="r-mp"><dt>Температура плавления:</dt><dd id="p-mp"></dd></div>
+            <div id="r-bp"><dt>Температура кипения:</dt><dd id="p-bp"></dd></div>
+            <div><dt>Электронов по оболочкам:</dt><dd id="p-shells"></dd></div>
+            <div><dt>Кем открыт:</dt><dd id="p-who"></dd></div>
+            <div><dt>Год открытия:</dt><dd id="p-year"></dd></div>
+          </dl>
+          <p id="mass-note" class="note" hidden>Значение в квадратных скобках — массовое число наиболее устойчивого изотопа.</p>
         </div>
-        <div class="caption">Модель Бора · перетащите, чтобы повернуть</div>
 
-        <p id="el-desc" class="desc"></p>
+        <!-- Информация о группе элементов -->
+        <div id="group" class="info" hidden>
+          <h2 class="el-title" id="g-title"></h2>
+          <div class="el-cat static"><span id="g-dot" class="dot"></span><span id="g-sub"></span></div>
 
-        <dl class="props">
-          <div><dt>Символ:</dt><dd id="p-sym"></dd></div>
-          <div><dt>Атомная масса:</dt><dd id="p-mass"></dd></div>
-          <div><dt>Температура плавления:</dt><dd id="p-mp"></dd></div>
-          <div><dt>Температура кипения:</dt><dd id="p-bp"></dd></div>
-          <div><dt>Электронов по оболочкам:</dt><dd id="p-shells"></dd></div>
-          <div><dt>Кем открыт:</dt><dd id="p-who"></dd></div>
-          <div><dt>Год открытия:</dt><dd id="p-year"></dd></div>
-        </dl>
-        <p id="mass-note" class="note" hidden>Значение в квадратных скобках — массовое число наиболее устойчивого изотопа.</p>
+          <p id="g-desc" class="desc"></p>
 
-        <a id="el-link" class="more" href="#" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-          <span id="el-more"></span>
-        </a>
+          <dl class="props">
+            <div><dt>Элементов в группе:</dt><dd id="g-count"></dd></div>
+            <div><dt>Где в таблице:</dt><dd id="g-where"></dd></div>
+          </dl>
+
+          <h3 class="sub">Особенности</h3>
+          <ul id="g-traits" class="traits"></ul>
+
+          <h3 class="sub">Элементы группы</h3>
+          <div id="g-list" class="members"></div>
+        </div>
+
       </div>
     </aside>
   </div>
 
-  <script src="js/data.js"></script>
-  <script src="js/shells.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/data.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
 </body>
 </html>

@@ -32,12 +32,15 @@
   color-scheme: dark;
 }
 
-/* ---------- База ---------- */
+/* ---------- База ----------
+ * Масштаб по умолчанию — 83 %: все размеры заданы в rem, поэтому страница
+ * открывается в нужном размере, а пользователь меняет масштаб сам (Ctrl +/−). */
 * { box-sizing: border-box; }
 
-html, body { margin: 0; }
+html { font-size: 83%; margin: 0; }
 
 body {
+  margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -46,11 +49,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+body.resizing { user-select: none; cursor: col-resize; }
+
 button { font: inherit; color: inherit; }
+
+[hidden] { display: none !important; }
 
 .app {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
+  grid-template-columns: minmax(0, 1fr) min(var(--panel-w, 28rem), 60vw);
   min-height: 100vh;
   min-height: 100dvh;
 }
@@ -63,12 +70,12 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Шапка ---------- */
 .top {
-  padding: 18px 24px 0;
+  padding: 1.125rem 1.5rem 0;
   text-align: center;
 }
 
 .brand {
-  font-size: 15px;
+  font-size: .9375rem;
   font-weight: 600;
   letter-spacing: .02em;
 }
@@ -79,30 +86,35 @@ button { font: inherit; color: inherit; }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 16px 24px;
-  gap: 22px;
+  padding: 1rem 1.5rem;
+  gap: 1.4rem;
 }
 
 .table-wrap {
   container-type: inline-size;
   width: 100%;
-  max-width: 1120px;
+  max-width: 72rem;
   margin: 0 auto;
 }
 
+/* 18 групп + узкий зазор между 3-й и 4-й группами (как в оригинале) */
 .table {
   --gap: 2px;
-  --cell: calc((100cqw - 17 * var(--gap)) / 18);
+  --spacer: .6;
+  --cell: calc((100cqw - 18 * var(--gap)) / (18 + var(--spacer)));
   display: grid;
-  grid-template-columns: repeat(18, var(--cell));
+  grid-template-columns: repeat(3, var(--cell)) calc(var(--cell) * var(--spacer)) repeat(15, var(--cell));
   grid-template-rows: repeat(7, var(--cell)) calc(var(--cell) * .55) repeat(2, var(--cell));
   gap: var(--gap);
 }
 
-.cell {
+.cell,
+.member {
   --cb: hsl(var(--h) calc(var(--bg-s) * var(--k, 1) * 1%) calc(var(--bg-l) * 1%));
   --cf: hsl(var(--h) calc(var(--fg-s) * var(--k, 1) * 1%) calc(var(--fg-l) * 1%));
+}
 
+.cell {
   position: relative;
   display: flex;
   align-items: center;
@@ -189,32 +201,32 @@ button { font: inherit; color: inherit; }
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  max-width: 1120px;
+  gap: .5rem;
+  max-width: 72rem;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: .5rem;
+  padding: .375rem .75rem;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
-  font-size: 13px;
+  font-size: .8125rem;
   cursor: pointer;
   transition: background-color .25s ease, border-color .25s ease, transform .18s var(--ease);
 }
 
-.chip .dot { width: 10px; height: 10px; }
 .chip:hover { background: var(--panel); transform: translateY(-1px); }
 .chip[aria-pressed="true"] { border-color: var(--text); background: var(--panel); }
 .chip:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 .dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  flex: none;
+  width: .625rem;
+  height: .625rem;
   border-radius: 50%;
   background: hsl(var(--h) calc(var(--fg-s) * var(--k, 1) * 1%) calc(var(--fg-l) * 1%));
   transition: background-color .35s ease;
@@ -227,22 +239,22 @@ button { font: inherit; color: inherit; }
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 24px;
+  gap: .875rem;
+  padding: .75rem 1.5rem;
   background: var(--bg);
   transition: background-color .35s ease;
 }
 
 .title {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 500;
 }
 
 .theme-btn {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 2.75rem;
+  height: 2.75rem;
   flex: none;
   padding: 0;
   overflow: hidden;
@@ -262,8 +274,8 @@ button { font: inherit; color: inherit; }
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 22px;
-  height: 22px;
+  width: 1.375rem;
+  height: 1.375rem;
   transition: transform .55s var(--ease), opacity .3s ease;
 }
 
@@ -279,12 +291,48 @@ button { font: inherit; color: inherit; }
   top: 0;
   height: 100vh;
   height: 100dvh;
-  overflow-y: auto;
-  padding: 28px 28px 24px;
   background: var(--panel);
   border-left: 1px solid var(--line);
   transition: background-color .35s ease, border-color .35s ease;
 }
+
+.panel-body {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.75rem 1.75rem 1.5rem;
+  overscroll-behavior: contain;
+}
+
+/* ручка для изменения ширины */
+.resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -.35rem;
+  width: .7rem;
+  z-index: 20;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.resizer::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 2.5rem;
+  border-radius: 2px;
+  background: var(--line);
+  transform: translate(-50%, -50%);
+  transition: background-color .2s ease, height .25s var(--ease);
+}
+
+.resizer:hover::after,
+.resizer.active::after,
+.resizer:focus-visible::after { background: var(--accent); height: 4.5rem; }
+
+.resizer:focus-visible { outline: none; }
 
 .info.swap { animation: rise .4s var(--ease); }
 
@@ -294,7 +342,7 @@ button { font: inherit; color: inherit; }
 
 .el-title {
   margin: 0;
-  font-size: 34px;
+  font-size: 2.125rem;
   font-weight: 400;
   line-height: 1.15;
   overflow-wrap: anywhere;
@@ -302,23 +350,34 @@ button { font: inherit; color: inherit; }
 
 .el-title sup {
   margin-left: 4px;
-  font-size: 18px;
+  font-size: 1.125rem;
   vertical-align: super;
 }
 
 .el-cat {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
+  gap: .5rem;
+  margin: .4rem 0 0 -.4rem;
+  padding: .2rem .5rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
   color: var(--muted);
-  font-size: 14px;
+  font-size: .875rem;
+  cursor: pointer;
+  transition: background-color .2s ease, color .2s ease;
 }
+
+.el-cat:hover { background: var(--bg); color: var(--text); }
+.el-cat:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.el-cat.static { cursor: default; margin-left: 0; padding-left: 0; }
+.el-cat.static:hover { background: transparent; color: var(--muted); }
 
 .bohr {
   position: relative;
-  height: 240px;
-  margin-top: 14px;
+  height: 16rem;
+  margin-top: .75rem;
 }
 
 .bohr canvas {
@@ -327,48 +386,77 @@ button { font: inherit; color: inherit; }
   width: 100%;
   height: 100%;
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: none;
+  user-select: none;
 }
 
 .bohr canvas:active { cursor: grabbing; }
 
 .caption {
   color: var(--muted);
-  font-size: 12px;
-  margin-top: 4px;
+  font-size: .75rem;
+  margin-top: .25rem;
 }
 
 .desc {
-  margin: 16px 0 18px;
-  font-size: 15px;
+  margin: 1rem 0 1.1rem;
+  font-size: .9375rem;
 }
 
-.props { margin: 0; font-size: 14px; }
-.props div { margin-bottom: 10px; }
+.props { margin: 0; font-size: .875rem; }
+.props > div { margin-bottom: .65rem; }
 .props dt { display: inline; color: var(--text); }
-.props dd { display: inline; margin: 0 0 0 4px; color: var(--muted); }
+.props dd { display: inline; margin: 0 0 0 .25rem; color: var(--muted); }
 
-.note { margin: -2px 0 14px; font-size: 12px; color: var(--muted); }
+.note { margin: -.1rem 0 1rem; font-size: .75rem; color: var(--muted); }
 
-.more {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  padding: 9px 16px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--accent);
-  font-size: 14px;
-  text-decoration: none;
-  transition: background-color .25s ease, border-color .25s ease, transform .18s var(--ease);
+/* информация о группе */
+.sub {
+  margin: 1.2rem 0 .5rem;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-.more:hover { background: var(--bg); transform: translateX(2px); }
-.more:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.traits {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: .875rem;
+}
 
-/* ---------- Узкие экраны ---------- */
+.traits li { margin-bottom: .4rem; }
+
+.members { display: flex; flex-wrap: wrap; gap: .3rem; }
+
+.member {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 2.6rem;
+  padding: .3rem .45rem .25rem;
+  border: 0;
+  border-radius: .4rem;
+  background: var(--cb);
+  color: var(--cf);
+  font-size: .95rem;
+  line-height: 1.1;
+  cursor: pointer;
+  transition: transform .15s var(--ease), box-shadow .2s ease, background-color .35s ease, color .35s ease;
+}
+
+.member small { font-size: .5625rem; font-weight: 600; opacity: .85; }
+
+@media (hover: hover) {
+  .member:hover { transform: scale(1.08); box-shadow: 0 3px 10px rgba(0, 0, 0, .25); }
+}
+
+.member:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* ---------- Узкие экраны и телефоны ---------- */
 @media (max-width: 900px) {
+  html { font-size: 100%; }
   .app { grid-template-columns: minmax(0, 1fr); }
   .panel {
     position: static;
@@ -377,10 +465,12 @@ button { font: inherit; color: inherit; }
     border-top: 1px solid var(--line);
     scroll-margin-top: 8px;
   }
-  .stage { padding: 12px 10px; }
-  .top, .bottom { padding-left: 14px; padding-right: 14px; }
-  .brand { font-size: 13px; }
-  .title { font-size: 16px; }
+  .panel-body { height: auto; overflow: visible; }
+  .resizer { display: none; }
+  .stage { padding: .75rem .6rem; }
+  .top, .bottom { padding-left: .9rem; padding-right: .9rem; }
+  .brand { font-size: .8125rem; }
+  .title { font-size: 1rem; }
 }
 
 /* ---------- Без анимаций, если пользователь так просит ---------- */
