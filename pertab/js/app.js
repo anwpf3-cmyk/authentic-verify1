@@ -8,7 +8,6 @@
   var DEFAULT_Z = 54;               // какой элемент показан в панели в состоянии покоя
 
   var root = document.documentElement;
-  var BASE_TITLE = document.title;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var narrowQuery = window.matchMedia('(max-width: 900px)');
   var NBSP = ' ';
@@ -308,7 +307,6 @@
     try { bohr.setElement(el); } catch (err) { if (window.console) console.error(err); }
     setMode('element');
 
-    document.title = el.name + ' (' + el.sym + ') — ' + BASE_TITLE;
     if (opts.hash !== false) setHash(el.sym);
     if (opts.scroll) scrollToPanel();
   }
@@ -322,7 +320,6 @@
     updateHighlight();
     renderGroup(cat);
     setMode('group');
-    document.title = CATEGORIES[cat].name + ' — ' + BASE_TITLE;
     setHash('');
     if (opts.scroll) scrollToPanel();
   }
@@ -334,7 +331,6 @@
     syncTab();
     updateHighlight();
     if (state.mode === 'group') setMode('element');
-    document.title = BASE_TITLE;
     setHash('');
   }
 

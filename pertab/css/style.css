@@ -95,17 +95,33 @@ button { font: inherit; color: inherit; }
   width: 100%;
   max-width: 72rem;
   margin: 0 auto;
+  padding: .4rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
-/* 18 групп + узкий зазор между 3-й и 4-й группами (как в оригинале) */
+/* 18 групп + узкий зазор между 3-й и 4-й группами (как в оригинале).
+ * Ячейка не меньше --cell-min: на узких экранах таблица прокручивается вбок,
+ * а названия и номера элементов остаются читаемыми. */
 .table {
   --gap: 2px;
   --spacer: .6;
-  --cell: calc((100cqw - 18 * var(--gap)) / (18 + var(--spacer)));
+  --cell-min: 3rem;
+  --cell: max(var(--cell-min), calc((100cqw - .8rem - 18 * var(--gap)) / (18 + var(--spacer))));
   display: grid;
   grid-template-columns: repeat(3, var(--cell)) calc(var(--cell) * var(--spacer)) repeat(15, var(--cell));
   grid-template-rows: repeat(7, var(--cell)) calc(var(--cell) * .55) repeat(2, var(--cell));
   gap: var(--gap);
+  width: max-content;
+  margin: 0 auto;
+}
+
+.hint {
+  display: none;
+  margin: -.6rem 0 0;
+  text-align: center;
+  font-size: .75rem;
+  color: var(--muted);
 }
 
 .cell,
@@ -188,10 +204,6 @@ button { font: inherit; color: inherit; }
 .c-nonmetal   { --h: 228; }
 .c-noble      { --h: 322; }
 .c-unknown    { --h: 0; --k: 0; }
-
-/* Мелкие подписи убираем на узких экранах */
-@container (max-width: 760px) { .cell .nm { display: none; } .cell .s { top: 0; } }
-@container (max-width: 520px) { .cell .n { display: none; } }
 
 /* ---------- Легенда ---------- */
 .legend {
@@ -467,7 +479,11 @@ button { font: inherit; color: inherit; }
   }
   .panel-body { height: auto; overflow: visible; }
   .resizer { display: none; }
-  .stage { padding: .75rem .6rem; }
+  .stage { padding: .75rem .4rem; }
+  .table { --cell-min: 3.3rem; }
+  .cell .nm { font-size: calc(var(--cell) * .15); }
+  .cell .n { font-size: calc(var(--cell) * .19); }
+  .hint { display: block; }
   .top, .bottom { padding-left: .9rem; padding-right: .9rem; }
   .brand { font-size: .8125rem; }
   .title { font-size: 1rem; }
