@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Верификация источника — ООО «Я ТЕБЯ НИКОГДА НЕ ПРЕДАМ. 3»</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M15 6h2v9h9v2h-9v9h-2v-9H6v-2h9z' fill='%23ffffff'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z' fill='%23ffffff'/%3E%3C/svg%3E">
     <style>
         :root {
             --bg: #060607;
@@ -20,6 +20,10 @@
             --red: #ff5c5c;
             --toggle-icon: #f5f5f7;
             --toggle-bg: rgba(255,255,255,0.06);
+            --tt-bg: #171a20;
+            --tt-border: #2a2e36;
+            --tt-fg: #e8eaed;
+            --tt-accent: #8ab4f8;
             --modal-bg: rgba(28,28,32,0.72);
             --modal-border: rgba(255,255,255,0.16);
             --transition: 0.45s cubic-bezier(0.22, 1, 0.36, 1);
@@ -37,6 +41,10 @@
             --accent-glow: rgba(0,0,0,0.35);
             --toggle-icon: #131315;
             --toggle-bg: rgba(0,0,0,0.05);
+            --tt-bg: #f4f5f7;
+            --tt-border: #e1e4e8;
+            --tt-fg: #1f2328;
+            --tt-accent: #1a56db;
             --modal-bg: rgba(255,255,255,0.82);
             --modal-border: rgba(0,0,0,0.10);
         }
@@ -76,33 +84,6 @@
             opacity: 0.6;
             transition: opacity var(--transition);
             z-index: 0;
-        }
-
-        /* top-right glowing mark */
-        .mark {
-            position: fixed;
-            top: 36px;
-            right: 44px;
-            font-size: 15px;
-            letter-spacing: 0.06em;
-            font-weight: 600;
-            color: var(--text-main);
-            text-shadow: 0 0 12px var(--accent-glow), 0 0 28px var(--accent-glow);
-            user-select: none;
-            z-index: 5;
-            animation: markPulse 4.5s ease-in-out infinite;
-        }
-
-        @keyframes markPulse {
-            0%, 100% {
-                text-shadow: 0 0 10px var(--accent-glow), 0 0 22px var(--accent-glow);
-                opacity: 0.9;
-            }
-
-            50% {
-                text-shadow: 0 0 16px var(--accent-glow), 0 0 38px var(--accent-glow);
-                opacity: 1;
-            }
         }
 
         main {
@@ -195,53 +176,68 @@
                     opacity: 0.7;
                 }
 
-        /* theme toggle */
+        /* theme toggle — такой же, как на сайте с периодической таблицей */
         .theme-toggle {
             position: fixed;
-            left: 32px;
-            bottom: 32px;
-            width: 48px;
-            height: 48px;
+            left: 20px;
+            bottom: 10px;
+            width: 37px;
+            height: 37px;
+            padding: 0;
+            overflow: hidden;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: var(--tt-bg);
+            border: 1px solid var(--tt-border);
+            color: var(--tt-fg);
             cursor: pointer;
             z-index: 50;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
-            transition: background var(--transition), border-color var(--transition), transform 0.2s ease;
+            transition: background-color .35s ease, border-color .35s ease, color .35s ease, transform .2s cubic-bezier(.2,.8,.2,1);
         }
 
             .theme-toggle:hover {
-                transform: translateY(-2px);
+                transform: scale(1.08);
             }
 
             .theme-toggle:active {
-                transform: translateY(0px) scale(0.94);
+                transform: scale(.94);
+            }
+
+            .theme-toggle:focus-visible {
+                outline: 2px solid var(--tt-accent);
+                outline-offset: 2px;
             }
 
             .theme-toggle svg {
-                width: 19px;
-                height: 19px;
-                stroke: var(--toggle-icon);
-                transition: stroke var(--transition);
+                position: absolute;
+                inset: 0;
+                margin: auto;
+                width: 18px;
+                height: 18px;
+                stroke: currentColor;
+                transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
             }
 
-        .icon-sun {
-            display: none;
+        /* В тёмной теме показываем солнце, в светлой — луну */
+        html[data-theme="dark"] .icon-sun {
+            opacity: 1;
+            transform: rotate(0) scale(1);
         }
 
-        html[data-theme="light"] .icon-moon {
-            display: none;
+        html[data-theme="dark"] .icon-moon {
+            opacity: 0;
+            transform: rotate(-90deg) scale(.3);
         }
 
         html[data-theme="light"] .icon-sun {
-            display: block;
+            opacity: 0;
+            transform: rotate(90deg) scale(.3);
+        }
+
+        html[data-theme="light"] .icon-moon {
+            opacity: 1;
+            transform: rotate(0) scale(1);
         }
 
         /* modal */
@@ -326,13 +322,7 @@
             }
 
         @media (max-width: 480px) {
-            .mark {
-                top: 24px;
-                right: 24px;
-                font-size: 13px;
-            }
-
-            h1 {
+h1 {
                 font-size: 21px;
             }
 
@@ -341,8 +331,15 @@
             }
 
             .theme-toggle {
-                left: 20px;
-                bottom: 20px;
+                left: 14px;
+                bottom: 12px;
+                width: 44px;
+                height: 44px;
+            }
+
+            .theme-toggle svg {
+                width: 22px;
+                height: 22px;
             }
 
             main {
@@ -365,7 +362,6 @@
 </head>
 <body>
     <div class="ambient"></div>
-    <div class="mark">I I</div>
 
     <main>
                 <h1>
@@ -383,12 +379,12 @@
     </main>
 
     <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
         </svg>
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4.2"></circle>
-            <path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.5 1.5M18.3 18.3l1.5 1.5M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.5-1.5M18.3 5.7l1.5-1.5"></path>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
         </svg>
     </button>
 
