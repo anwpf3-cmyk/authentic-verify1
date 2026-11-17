@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ксенон</title>
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #18191B;         /* Уникальный глубокий графитово-серый оттенок */
+      --bg-sidebar: #131416;      /* Чуть более темный серый для боковой панели */
+      --bg-input: #222428;        /* Цвет поля ввода */
+      --bg-hover: #2A2D32;        /* Цвет при наведении */
+      --border-subtle: #2E3136;   /* Тонкие границы */
+      --text-primary: #ECECEE;    /* Основной светлый текст */
+      --text-secondary: #8E929B;  /* Второстепенный серый текст */
+      --neon-white: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      position: relative;
+    }
+
+    /* Кнопка-символ "l" в левом верхнем углу */
+    .sidebar-trigger {
+      position: fixed;
+      top: 16px;
+      left: 18px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 20px;
+      font-weight: 300;
+      user-select: none;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .sidebar-trigger:hover,
+    .sidebar-trigger.pinned {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    /* Невидимая зона у левого края для удобного наведения */
+    .hover-edge-zone {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 16px;
+      height: 100vh;
+      z-index: 90;
+    }
+
+    /* Выдвижная боковая панель */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100vh;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-subtle);
+      padding: 18px 14px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(-100%);
+      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 95;
+      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      padding-left: 42px; /* Отступ под кнопку "l" */
+      height: 28px;
+      margin-bottom: 18px;
+    }
+
+    .brand-title {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 19px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--text-primary);
+    }
+
+    .new-chat-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 9px 12px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 13.5px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      margin-bottom: 16px;
+    }
+
+    .new-chat-btn:hover {
+      background-color: var(--bg-hover);
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 24px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 13.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .nav-item:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .chats-section-title {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      padding: 0 12px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .chat-history {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .chat-history-item {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #C4C7CE;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .chat-history-item:hover {
+      background-color: var(--bg-hover);
+    }
+
+    /* Основная рабочая область */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      transition: margin-left 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+      width: 100%;
+    }
+
+    /* Сдвиг контента, если панель зафиксирована кликом */
+    body.sidebar-pinned .main-container {
+      margin-left: 260px;
+    }
+
+    .center-wrapper {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Блок приветствия */
+    .greeting-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .neon-plus {
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--neon-white);
+      line-height: 1;
+      user-select: none;
+      text-shadow:
+        0 0 6px rgba(255, 255, 255, 0.95),
+        0 0 14px rgba(255, 255, 255, 0.75),
+        0 0 28px rgba(255, 255, 255, 0.45);
+      animation: pulseGlow 3.2s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseGlow {
+      from {
+        text-shadow:
+          0 0 5px rgba(255, 255, 255, 0.85),
+          0 0 12px rgba(255, 255, 255, 0.6),
+          0 0 22px rgba(255, 255, 255, 0.35);
+      }
+      to {
+        text-shadow:
+          0 0 8px rgba(255, 255, 255, 1),
+          0 0 18px rgba(255, 255, 255, 0.85),
+          0 0 34px rgba(255, 255, 255, 0.55);
+      }
+    }
+
+    .greeting-text {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 27px;
+      font-weight: 400;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+
+    /* Поле ввода как на скриншоте 3 (очищенное от лишних элементов) */
+    .prompt-container {
+      width: 100%;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 14px 14px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      transition: border-color 0.2s ease;
+    }
+
+    .prompt-container:focus-within {
+      border-color: #454952;
+    }
+
+    /* Список прикрепленных файлов */
+    .attached-files {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .attached-files.has-files {
+      display: flex;
+    }
+
+    .file-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: #2E3137;
+      border: 1px solid #3C4048;
+      color: var(--text-primary);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    .file-chip button {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .file-chip button:hover {
+      color: #fff;
+    }
+
+    .prompt-textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      resize: none;
+      min-height: 44px;
+      max-height: 200px;
+    }
+
+    .prompt-textarea::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .prompt-bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Кнопка "+" слева внизу для прикрепления файлов */
+    .attach-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 22px;
+      font-weight: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .attach-btn:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    /* Белая квадратная кнопка с чёрной "^" справа внизу */
+    .send-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background-color: #FFFFFF;
+      border: none;
+      color: #000000;
+      font-family: 'Inter', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding-top: 4px; /* Визуальное центрирование символа ^ */
+      transition: transform 0.12s ease, background-color 0.15s ease;
+    }
+
+    .send-btn:hover {
+      background-color: #E4E4E7;
+    }
+
+    .send-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Область сообщений (появляется после отправки) */
+    .messages-area {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+      max-height: 55vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .messages-area.active {
+      display: flex;
+    }
+
+    .msg {
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14.5px;
+      line-height: 1.55;
+      max-width: 85%;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background-color: #2B2E34;
+      color: var(--text-primary);
+    }
+
+    .msg.ai {
+      align-self: flex-start;
+            background-color: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+
+    @media (max-width: 640px) {
+      .greeting-text {
+        font-size: 21px;
+      }
+      body.sidebar-pinned .main-container {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hover-edge-zone" id="hoverEdge"></div>
+  <div class="sidebar-trigger" id="sidebarTrigger" title="Меню">l</div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="brand-title">Ксенон</span>
+    </div>
+
+    <button class="new-chat-btn" id="newChatBtn">
+      <span>+</span>
+      <span>Новый чат</span>
+    </button>
+
+    <div class="sidebar-nav">
+      <div class="nav-item">Поиск по чатам</div>
+      <div class="nav-item">Проекты</div>
+      <div class="nav-item">Артефакты</div>
+      <div class="nav-item">Агенты и скиллы</div>
+    </div>
+
+    <div class="chats-section-title">Недавние задачи</div>
+    <div class="chat-history" id="chatHistory">
+      <div class="chat-history-item">Создание SVG-логотипа</div>
+      <div class="chat-history-item">Архитектура ИИ-агента</div>
+    </div>
+  </aside>
+
+  <main class="main-container">
+    <div class="center-wrapper">
+
+      <div class="greeting-box" id="greetingBox">
+        <span class="neon-plus">+</span>
+        <h1 class="greeting-text" id="greetingText"></h1>
+      </div>
+
+      <div class="messages-area" id="messagesArea"></div>
+
+      <div class="prompt-container">
+        <div class="attached-files" id="attachedFiles"></div>
+
+        <textarea
+          class="prompt-textarea"
+          id="promptInput"
+          placeholder="Чем я могу помочь сегодня?"
+          rows="1"
+        ></textarea>
+
+        <div class="prompt-bottom-bar">
+          <input type="file" id="fileInput" multiple hidden />
+          <button type="button" class="attach-btn" id="attachBtn" title="Прикрепить файлы">+</button>
+
+          <button type="button" class="send-btn" id="sendBtn" title="Отправить">^</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const greetingsByHour = {
+      0: [
+        "Полночь открывает чистый лист для идей.",
+        "С новым днем и ясными мыслями!",
+        "В звездной тишине так легко сосредоточиться."
+      ],
+      1: [
+        "Ночной покой помогает поймать нужный ритм.",
+        "Время глубокого фокуса и смелых решений.",
+        "Тишина вокруг создана для твоих планов."
+      ],
+      2: [
+        "В два часа ночи рождаются лучшие строки.",
+        "Ночь бережет твое вдохновение для дела.",
+        "Пусть тихий свет экрана ведет к цели."
+      ],
+      3: [
+        "Самый спокойный час для важных задач.",
+        "Мир замер, чтобы ничто не отвлекало.",
+        "Ночная прохлада освежает ход мыслей."
+      ],
+      4: [
+        "Предрассветная тишина заряжает на результат.",
+        "На пороге рассвета рождаются точные шаги.",
+        "Небеса светлеют, открывая путь новым идеям."
+      ],
+      5: [
+        "Первые лучи солнца будит жажду творить!",
+        "С рассветом приходит свежая энергия для дел.",
+        "Утро начинается с твоего уверенного старта."
+      ],
+      6: [
+        "Доброе утро и легкого входа в ритм!",
+        "Свежесть раннего утра зовет к новым свершениям.",
+        "Пусть этот рассвет подарит ясный взгляд на задачи."
+      ],
+      7: [
+        "Утренний свет наполняет день смыслом и силой.",
+        "Прекрасный час, чтобы наметить главные цели.",
+        "Доброе утро, время воплощать задуманное!"
+      ],
+      8: [
+        "Утренний ветер приносит свежие решения.",
+        "Бодрого утра и красивого рабочего темпа!",
+        "День набирает высоту — самое время действовать."
+      ],
+      9: [
+        "Пусть утренняя ясность поможет в каждом шаге.",
+        "Доброе утро и вдохновения на весь день!",
+        "Солнце зовет смело браться за интересные проекты."
+      ],
+      10: [
+        "Утро в расцвете — лови волну продуктивности!",
+        "Пусть дела складываются легко и гармонично.",
+        "Отличный час для смелых творческих шагов."
+      ],
+      11: [
+        "Светлое настроение помогает решать любые задачи.",
+        "Утро плавно перетекает в уверенный рабочий поток.",
+        "Лови вдохновение и энергию этого часа!"
+      ],
+      12: [
+        "Солнце в зените — время ярких результатов!",
+        "Полдень дарит ясность и силы для новых высот.",
+        "Добрый день и гармоничного рабочего настроя!"
+      ],
+      13: [
+        "Пусть этот дневной час принесет легкие решения.",
+        "Самое сердце дня зовет двигаться вперед.",
+        "Теплого привета и свежего взгляда на дела!"
+      ],
+      14: [
+        "Спокойное течение дня помогает держать фокус.",
+        "Добрый день, полный интересных открытий!",
+        "Пусть удача сопровождает каждую твою идею."
+      ],
+      15: [
+        "День сияет красками твоих новых побед.",
+        "Душевного равновесия и точности в работе!",
+        "Светлый час для воплощения главных планов."
+      ],
+      16: [
+        "Золотые лучи дня вдохновляют на финальный рывок.",
+        "Пусть все задуманное обретает четкую форму.",
+        "Уютного и продуктивного продолжения дня!"
+      ],
+      17: [
+        "Предвечерний свет настраивает на вдумчивый труд.",
+        "Отличный момент, чтобы красиво оформить идеи.",
+        "Мягкий ритм конца дня помогает довести дело до идеала."
+      ],
+      18: [
+        "Добрый вечер и вдохновения в красках заката!",
+        "Сумерки приносят спокойствие и глубину мыслей.",
+        "Вечер открывает время для неспешных задач."
+      ],
+      19: [
+        "Вечерние огни зажигают искру новых замыслов.",
+        "Добрый вечер — пора творить без суеты!",
+        "Уютная атмосфера помогает сосредоточиться на главном."
+      ],
+      20: [
+        "Вечерняя прохлада освежает взгляд на проекты.",
+        "Привет под первые звезды — самое время для идей.",
+        "Пусть этот тихий вечер подарит ясность ума."
+      ],
+      21: [
+        "Добрый вечер, время спокойного и глубокого фокуса!",
+        "В тихом свете луны легко рождаются решения.",
+        "Вечерняя тишина бережет твою концентрацию."
+      ],
+      22: [
+        "Поздний вечер располагает к вдумчивой работе.",
+        "Теплый свет лампы помогает навести порядок в мыслях.",
+        "Доброго вечера и вдохновения для важных строк!"
+      ],
+      23: [
+        "На исходе суток рождаются самые точные идеи.",
+        "Звездный час для тех, кто увлечен своим делом.",
+        "Тихий привет в завершении дня — я готов помочь!"
+      ]
+    };
+
+    function setRandomGreeting() {
+      const currentHour = new Date().getHours();
+      const phrases = greetingsByHour[currentHour] || greetingsByHour[0];
+      const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+      document.getElementById('greetingText').textContent = randomPhrase;
+    }
+
+    setRandomGreeting();
+
+    const sidebar = document.getElementById('sidebar');
+    const trigger = document.getElementById('sidebarTrigger');
+    const hoverEdge = document.getElementById('hoverEdge');
+    let isPinned = false;
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+    }
+
+    function closeSidebar() {
+      if (!isPinned) {
+        sidebar.classList.remove('open');
+      }
+    }
+
+    trigger.addEventListener('mouseenter', openSidebar);
+    hoverEdge.addEventListener('mouseenter', openSidebar);
+    sidebar.addEventListener('mouseleave', closeSidebar);
+
+    trigger.addEventListener('click', () => {
+      isPinned = !isPinned;
+      if (isPinned) {
+        sidebar.classList.add('open');
+        trigger.classList.add('pinned');
+        document.body.classList.add('sidebar-pinned');
+      } else {
+        sidebar.classList.remove('open');
+        trigger.classList.remove('pinned');
+        document.body.classList.remove('sidebar-pinned');
+      }
+    });
+
+    const attachBtn = document.getElementById('attachBtn');
+    const fileInput = document.getElementById('fileInput');
+    const attachedFilesBox = document.getElementById('attachedFiles');
+    let selectedFiles = [];
+
+    attachBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      selectedFiles = selectedFiles.concat(files);
+      renderFiles();
+      fileInput.value = '';
+    });
+
+    function renderFiles() {
+      attachedFilesBox.innerHTML = '';
+      if (selectedFiles.length === 0) {
+        attachedFilesBox.classList.remove('has-files');
+        return;
+      }
+      attachedFilesBox.classList.add('has-files');
+      selectedFiles.forEach((file, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'file-chip';
+        chip.innerHTML = `
+          <span>${file.name}</span>
+          <button type="button" data-idx="${index}">&times;</button>
+        `;
+        chip.querySelector('button').addEventListener('click', () => {
+          selectedFiles.splice(index, 1);
+          renderFiles();
+        });
+        attachedFilesBox.appendChild(chip);
+      });
+    }
+
+    const promptInput = document.getElementById('promptInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const messagesArea = document.getElementById('messagesArea');
+    const greetingBox = document.getElementById('greetingBox');
+    const newChatBtn = document.getElementById('newChatBtn');
+
+    promptInput.addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = this.scrollHeight + 'px';
+    });
+
+    function handleSend() {
+      const text = promptInput.value.trim();
+      if (!text && selectedFiles.length === 0) return;
+
+      greetingBox.style.display = 'none';
+      messagesArea.classList.add('active');
+
+      const userMsg = document.createElement('div');
+      userMsg.className = 'msg user';
+      const fileNames = selectedFiles.length
+        ? `\n[Файлы: ${selectedFiles.map(f => f.name).join(', ')}]`        : '';
+      userMsg.textContent = text + fileNames;
+      messagesArea.appendChild(userMsg);
+
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'msg ai';
+      aiMsg.textContent = 'Ксенон: Интерфейс готов к работе. Подключите API-ключ для запуска агентов.';
+      messagesArea.appendChild(aiMsg);
+
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+
+      promptInput.value = '';
+      promptInput.style.height = 'auto';
+      selectedFiles = [];
+      renderFiles();
+    }
+
+    sendBtn.addEventListener('click', handleSend);
+
+    promptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+
+    newChatBtn.addEventListener('click', () => {
+      messagesArea.innerHTML = '';
+      messagesArea.classList.remove('active');
+      greetingBox.style.display = 'flex';
+      setRandomGreeting();
+    });
+  </script>
+</body>
+</html>
+
