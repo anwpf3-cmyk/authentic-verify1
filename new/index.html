@@ -4,19 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ксенон</title>
+  <!-- Точный значок вкладки (толстый белый крестик со скругленными краями) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://w3.org' viewBox='0 0 32 32'%3E%3Cpath d='M16 6V26M6 16H26' stroke='%23FFFFFF' stroke-width='5.5' stroke-linecap='round'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://googleapis.com">
   <link rel="preconnect" href="https://gstatic.com" crossorigin>
   <link href="https://googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-main: #18191B;         /* Уникальный глубокий графитово-серый оттенок */
-      --bg-sidebar: #131416;      /* Чуть более темный серый для боковой панели */
-      --bg-input: #222428;        /* Цвет поля ввода */
-      --bg-hover: #2A2D32;        /* Цвет при наведении */
-      --border-subtle: #2E3136;   /* Тонкие границы */
-      --text-primary: #ECECEE;    /* Основной светлый текст */
-      --text-secondary: #8E929B;  /* Второстепенный серый текст */
-      --neon-white: #FFFFFF;
+      /* Тёмная тема (по умолчанию) */
+      --bg-main: #18191B;
+      --bg-sidebar: #131416;
+      --bg-input: #222428;
+      --bg-hover: #2A2D32;
+      --bg-msg-user: #2B2E34;
+      --border-subtle: #2E3136;
+      --border-focus: #454952;
+      --text-primary: #ECECEE;
+      --text-secondary: #8E929B;
+      --send-btn-bg: #FFFFFF;
+      --send-btn-color: #000000;
+      --shadow-input: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Светлая тема в светло-серых оттенках */
+    body.light-theme {
+      --bg-main: #E2E4E8;
+      --bg-sidebar: #D6D9DF;
+      --bg-input: #ECEEF1;
+      --bg-hover: #C9CDD4;
+      --bg-msg-user: #D2D5DC;
+      --border-subtle: #C2C6CE;
+      --border-focus: #A6ACB8;
+      --text-primary: #1F2227;
+      --text-secondary: #5F6572;
+      --send-btn-bg: #FFFFFF;
+      --send-btn-color: #000000;
+      --shadow-input: 0 6px 20px rgba(0, 0, 0, 0.06);
     }
 
     * {
@@ -33,6 +56,7 @@
       overflow: hidden;
       display: flex;
       position: relative;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     /* Кнопка-символ "l" в левом верхнем углу */
@@ -61,7 +85,6 @@
       color: var(--text-primary);
     }
 
-    /* Невидимая зона у левого края для удобного наведения */
     .hover-edge-zone {
       position: fixed;
       top: 0;
@@ -84,9 +107,9 @@
       display: flex;
       flex-direction: column;
       transform: translateX(-100%);
-      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease, border-color 0.25s ease;
       z-index: 95;
-      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.35);
+      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.25);
     }
 
     .sidebar.open {
@@ -96,7 +119,7 @@
     .sidebar-header {
       display: flex;
       align-items: center;
-      padding-left: 42px; /* Отступ под кнопку "l" */
+      padding-left: 42px;
       height: 28px;
       margin-bottom: 18px;
     }
@@ -109,6 +132,7 @@
       color: var(--text-primary);
     }
 
+    /* Кнопка "Новый чат" с прозрачной окантовкой */
     .new-chat-btn {
       display: flex;
       align-items: center;
@@ -116,72 +140,54 @@
       width: 100%;
       padding: 9px 12px;
       background: transparent;
-      border: 1px solid var(--border-subtle);
+      border: 1px solid transparent;
       border-radius: 8px;
       color: var(--text-primary);
       font-size: 13.5px;
       cursor: pointer;
       transition: background-color 0.15s ease;
-      margin-bottom: 16px;
     }
 
     .new-chat-btn:hover {
       background-color: var(--bg-hover);
     }
 
-    .sidebar-nav {
+    /* Нижний футер панели с миниатюрной кнопкой темы в правом нижнем углу */
+    .sidebar-footer {
+      margin-top: auto;
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 24px;
+      justify-content: flex-end;
+      align-items: center;
+      padding-top: 12px;
     }
 
-    .nav-item {
+    .theme-toggle-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      color: var(--text-secondary);
-      font-size: 13.5px;
+      justify-content: center;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background-color 0.15s ease, color 0.15s ease;
     }
 
-    .nav-item:hover {
+    .theme-toggle-btn:hover {
       background-color: var(--bg-hover);
       color: var(--text-primary);
     }
 
-    .chats-section-title {
-      font-size: 11.5px;
-      color: var(--text-secondary);
-      padding: 0 12px;
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-
-    .chat-history {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .chat-history-item {
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      color: #C4C7CE;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      cursor: pointer;
-    }
-
-    .chat-history-item:hover {
-      background-color: var(--bg-hover);
+    .theme-toggle-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     /* Основная рабочая область */
@@ -194,19 +200,32 @@
       padding: 24px;
       transition: margin-left 0.26s cubic-bezier(0.22, 1, 0.36, 1);
       width: 100%;
+      height: 100vh;
     }
 
-    /* Сдвиг контента, если панель зафиксирована кликом */
     body.sidebar-pinned .main-container {
       margin-left: 260px;
     }
 
     .center-wrapper {
       width: 100%;
-      max-width: 720px;
+      max-width: 740px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      transition: all 0.25s ease;
+    }
+
+    /* Режим активного чата (когда сообщение отправлено) */
+    .main-container.chat-started {
+      justify-content: flex-end;
+      padding-top: 56px;
+      padding-bottom: 18px;
+    }
+
+    .main-container.chat-started .center-wrapper {
+      height: 100%;
+      justify-content: space-between;
     }
 
     /* Блок приветствия */
@@ -219,31 +238,39 @@
       text-align: center;
     }
 
+    /* Неоновый белый "+" (остается неоново-белым и в светлой теме) */
     .neon-plus {
       font-size: 28px;
-      font-weight: 300;
-      color: var(--neon-white);
+      font-weight: 400;
+      color: #FFFFFF;
       line-height: 1;
       user-select: none;
       text-shadow:
-        0 0 6px rgba(255, 255, 255, 0.95),
-        0 0 14px rgba(255, 255, 255, 0.75),
-        0 0 28px rgba(255, 255, 255, 0.45);
+        0 0 6px rgba(255, 255, 255, 1),
+        0 0 14px rgba(255, 255, 255, 0.9),
+        0 0 26px rgba(255, 255, 255, 0.75);
       animation: pulseGlow 3.2s infinite alternate ease-in-out;
+    }
+
+    body.light-theme .neon-plus {
+      text-shadow:
+        0 0 4px rgba(255, 255, 255, 1),
+        0 0 12px rgba(255, 255, 255, 0.95),
+        0 0 22px rgba(180, 190, 210, 0.85);
     }
 
     @keyframes pulseGlow {
       from {
         text-shadow:
-          0 0 5px rgba(255, 255, 255, 0.85),
-          0 0 12px rgba(255, 255, 255, 0.6),
-          0 0 22px rgba(255, 255, 255, 0.35);
+          0 0 5px rgba(255, 255, 255, 0.9),
+          0 0 12px rgba(255, 255, 255, 0.75),
+          0 0 22px rgba(255, 255, 255, 0.5);
       }
       to {
         text-shadow:
           0 0 8px rgba(255, 255, 255, 1),
-          0 0 18px rgba(255, 255, 255, 0.85),
-          0 0 34px rgba(255, 255, 255, 0.55);
+          0 0 18px rgba(255, 255, 255, 0.95),
+          0 0 32px rgba(255, 255, 255, 0.75);
       }
     }
 
@@ -256,7 +283,45 @@
       line-height: 1.3;
     }
 
-    /* Поле ввода как на скриншоте 3 (очищенное от лишних элементов) */
+    /* Область сообщений */
+    .messages-area {
+      display: none;
+      width: 100%;
+      flex: 1;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 16px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .messages-area.active {
+      display: flex;
+    }
+
+    .msg {
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14.5px;
+      line-height: 1.55;
+      max-width: 85%;
+      white-space: pre-wrap;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background-color: var(--bg-msg-user);
+      color: var(--text-primary);
+    }
+
+    .msg.ai {
+      align-self: flex-start;
+      background-color: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+
+    /* Поле ввода (начальный вид по центру) */
     .prompt-container {
       width: 100%;
       background-color: var(--bg-input);
@@ -266,19 +331,29 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-      transition: border-color 0.2s ease;
+      box-shadow: var(--shadow-input);
+      transition: border-color 0.2s ease, background-color 0.25s ease, padding 0.2s ease;
     }
 
     .prompt-container:focus-within {
-      border-color: #454952;
+      border-color: var(--border-focus);
     }
 
-    /* Список прикрепленных файлов */
+    /* Компактный вид поля ввода внизу экрана после отправки сообщения */
+    .main-container.chat-started .prompt-container {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 8px 10px 8px 10px;
+      border-radius: 14px;
+      gap: 8px;
+    }
+
     .attached-files {
       display: none;
       flex-wrap: wrap;
       gap: 8px;
+      width: 100%;
     }
 
     .attached-files.has-files {
@@ -289,8 +364,8 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background-color: #2E3137;
-      border: 1px solid #3C4048;
+      background-color: var(--bg-hover);
+      border: 1px solid var(--border-subtle);
       color: var(--text-primary);
       font-size: 12px;
       padding: 4px 10px;
@@ -306,10 +381,6 @@
       line-height: 1;
     }
 
-    .file-chip button:hover {
-      color: #fff;
-    }
-
     .prompt-textarea {
       width: 100%;
       background: transparent;
@@ -321,7 +392,14 @@
       line-height: 1.5;
       resize: none;
       min-height: 44px;
-      max-height: 200px;
+    /* В компактном режиме текстовое поле становится в одну строку между "+" и "^" */
+    .main-container.chat-started .prompt-textarea {
+      flex: 1;
+      width: auto;
+      min-height: 24px;
+      max-height: 140px;
+      order: 2;
+      padding: 4px 2px;
     }
 
     .prompt-textarea::placeholder {
@@ -332,9 +410,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      width: 100%;
     }
 
-    /* Кнопка "+" слева внизу для прикрепления файлов */
+    /* В компактном режиме нижняя панель "растворяется", расставляя кнопки по краям строки */
+    .main-container.chat-started .prompt-bottom-bar {
+      display: contents;
+    }
+
     .attach-btn {
       width: 32px;
       height: 32px;
@@ -348,7 +431,12 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      flex-shrink: 0;
       transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .main-container.chat-started .attach-btn {
+      order: 1;
     }
 
     .attach-btn:hover {
@@ -356,14 +444,14 @@
       color: var(--text-primary);
     }
 
-    /* Белая квадратная кнопка с чёрной "^" справа внизу */
+    /* Кнопка отправки "^" — скрыта, пока в поле нет символов */
     .send-btn {
       width: 32px;
       height: 32px;
       border-radius: 8px;
-      background-color: #FFFFFF;
+      background-color: var(--send-btn-bg);
       border: none;
-      color: #000000;
+      color: var(--send-btn-color);
       font-family: 'Inter', sans-serif;
       font-size: 18px;
       font-weight: 600;
@@ -371,53 +459,28 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      padding-top: 4px; /* Визуальное центрирование символа ^ */
-      transition: transform 0.12s ease, background-color 0.15s ease;
+      padding-top: 4px;
+      flex-shrink: 0;
+      margin-left: auto;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.88);
+      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
     }
 
-    .send-btn:hover {
-      background-color: #E4E4E7;
+    .send-btn.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+    }
+
+    .main-container.chat-started .send-btn {
+      order: 3;
+      margin-left: 0;
     }
 
     .send-btn:active {
-      transform: scale(0.95);
-    }
-
-    /* Область сообщений (появляется после отправки) */
-    .messages-area {
-      display: none;
-      width: 100%;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 20px;
-      max-height: 55vh;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .messages-area.active {
-      display: flex;
-    }
-
-    .msg {
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 14.5px;
-      line-height: 1.55;
-      max-width: 85%;
-    }
-
-    .msg.user {
-      align-self: flex-end;
-      background-color: #2B2E34;
-      color: var(--text-primary);
-    }
-
-    .msg.ai {
-      align-self: flex-start;
-            background-color: transparent;
-      border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
+      transform: scale(0.94);
     }
 
     @media (max-width: 640px) {
@@ -445,21 +508,20 @@
       <span>Новый чат</span>
     </button>
 
-    <div class="sidebar-nav">
-      <div class="nav-item">Поиск по чатам</div>
-      <div class="nav-item">Проекты</div>
-      <div class="nav-item">Артефакты</div>
-      <div class="nav-item">Агенты и скиллы</div>
-    </div>
-
-    <div class="chats-section-title">Недавние задачи</div>
-    <div class="chat-history" id="chatHistory">
-      <div class="chat-history-item">Создание SVG-логотипа</div>
-      <div class="chat-history-item">Архитектура ИИ-агента</div>
+    <div class="sidebar-footer">
+      <button class="theme-toggle-btn" id="themeToggleBtn" title="Сменить тему">
+        <svg id="iconSun" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg id="iconMoon" viewBox="0 0 24 24" style="display: none;">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
     </div>
   </aside>
 
-  <main class="main-container">
+  <main class="main-container" id="mainContainer">
     <div class="center-wrapper">
 
       <div class="greeting-box" id="greetingBox">
@@ -469,7 +531,7 @@
 
       <div class="messages-area" id="messagesArea"></div>
 
-      <div class="prompt-container">
+      <div class="prompt-container" id="promptContainer">
         <div class="attached-files" id="attachedFiles"></div>
 
         <textarea
@@ -482,7 +544,6 @@
         <div class="prompt-bottom-bar">
           <input type="file" id="fileInput" multiple hidden />
           <button type="button" class="attach-btn" id="attachBtn" title="Прикрепить файлы">+</button>
-
           <button type="button" class="send-btn" id="sendBtn" title="Отправить">^</button>
         </div>
       </div>
@@ -616,15 +677,38 @@
 
     function setRandomGreeting() {
       const currentHour = new Date().getHours();
-      const phrases = greetingsByHour[currentHour] || greetingsByHour[0];
+      const phrases = greetingsByHour[currentHour] || greetingsByHour;
       const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
       document.getElementById('greetingText').textContent = randomPhrase;
     }
 
     setRandomGreeting();
 
-    const sidebar = document.getElementById('sidebar');
-    const trigger = document.getElementById('sidebarTrigger');
+    // Переключатель темы
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const iconSun = document.getElementById('iconSun');
+    const iconMoon = document.getElementById('iconMoon');
+
+    function applyTheme(isLight) {
+      if (isLight) {
+        document.body.classList.add('light-theme');
+        iconSun.style.display = 'none';
+        iconMoon.style.display = 'block';
+      } else {
+        document.body.classList.remove('light-theme');
+        iconSun.style.display = 'block';
+        iconMoon.style.display = 'none';
+      }
+    }
+
+    const savedTheme = localStorage.getItem('xenon_theme');
+    if (savedTheme === 'light') {
+      applyTheme(true);
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      const isLightNow = !document.body.classList.contains('light-theme');
+      applyTheme(isLightNow);
     const hoverEdge = document.getElementById('hoverEdge');
     let isPinned = false;
 
@@ -655,10 +739,25 @@
       }
     });
 
+    // Управление видимостью кнопки "^"
+    const promptInput = document.getElementById('promptInput');
+    const sendBtn = document.getElementById('sendBtn');
+    let selectedFiles = [];
+
+    function updateSendButtonVisibility() {
+      const hasText = promptInput.value.length > 0;
+      const hasFiles = selectedFiles.length > 0;
+      if (hasText || hasFiles) {
+        sendBtn.classList.add('visible');
+      } else {
+        sendBtn.classList.remove('visible');
+      }
+    }
+
+    // Прикрепление файлов
     const attachBtn = document.getElementById('attachBtn');
     const fileInput = document.getElementById('fileInput');
     const attachedFilesBox = document.getElementById('attachedFiles');
-    let selectedFiles = [];
 
     attachBtn.addEventListener('click', () => fileInput.click());
 
@@ -666,6 +765,7 @@
       const files = Array.from(e.target.files);
       selectedFiles = selectedFiles.concat(files);
       renderFiles();
+      updateSendButtonVisibility();
       fileInput.value = '';
     });
 
@@ -681,18 +781,19 @@
         chip.className = 'file-chip';
         chip.innerHTML = `
           <span>${file.name}</span>
-          <button type="button" data-idx="${index}">&times;</button>
+          <button type="button">&times;</button>
         `;
         chip.querySelector('button').addEventListener('click', () => {
           selectedFiles.splice(index, 1);
           renderFiles();
+          updateSendButtonVisibility();
         });
         attachedFilesBox.appendChild(chip);
       });
     }
 
-    const promptInput = document.getElementById('promptInput');
-    const sendBtn = document.getElementById('sendBtn');
+    // Авто-высота поля и отправка сообщения
+    const mainContainer = document.getElementById('mainContainer');
     const messagesArea = document.getElementById('messagesArea');
     const greetingBox = document.getElementById('greetingBox');
     const newChatBtn = document.getElementById('newChatBtn');
@@ -700,20 +801,23 @@
     promptInput.addEventListener('input', function () {
       this.style.height = 'auto';
       this.style.height = this.scrollHeight + 'px';
+      updateSendButtonVisibility();
     });
 
     function handleSend() {
-      const text = promptInput.value.trim();
-      if (!text && selectedFiles.length === 0) return;
+      const text = promptInput.value;
+      if (!text.trim() && selectedFiles.length === 0) return;
 
       greetingBox.style.display = 'none';
       messagesArea.classList.add('active');
+      mainContainer.classList.add('chat-started');
 
       const userMsg = document.createElement('div');
       userMsg.className = 'msg user';
       const fileNames = selectedFiles.length
-        ? `\n[Файлы: ${selectedFiles.map(f => f.name).join(', ')}]`        : '';
-      userMsg.textContent = text + fileNames;
+        ? `\n[Файлы: ${selectedFiles.map(f => f.name).join(', ')}]`
+        : '';
+      userMsg.textContent = text.trim() + fileNames;
       messagesArea.appendChild(userMsg);
 
       const aiMsg = document.createElement('div');
@@ -727,6 +831,7 @@
       promptInput.style.height = 'auto';
       selectedFiles = [];
       renderFiles();
+      updateSendButtonVisibility();
     }
 
     sendBtn.addEventListener('click', handleSend);
@@ -738,13 +843,19 @@
       }
     });
 
+    // Сброс в начальный режим по клику на "Новый чат"
     newChatBtn.addEventListener('click', () => {
       messagesArea.innerHTML = '';
       messagesArea.classList.remove('active');
+      mainContainer.classList.remove('chat-started');
       greetingBox.style.display = 'flex';
+      promptInput.value = '';
+      promptInput.style.height = 'auto';
+      selectedFiles = [];
+      renderFiles();
+      updateSendButtonVisibility();
       setRandomGreeting();
     });
   </script>
 </body>
 </html>
-
