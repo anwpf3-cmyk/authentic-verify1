@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Новый чат</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 2.8v10.4M2.8 8h10.4' stroke='%23ECECEE' stroke-width='2.7' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link id="faviconLink" rel="icon" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
       --send-btn-bg: #FFFFFF;
       --send-btn-color: #000000;
       --shadow-input: 0 8px 24px rgba(0, 0, 0, 0.2);
-      --sidebar-width: 250px;
+      --sidebar-width: 240px;
     }
 
     body.light-theme {
@@ -57,16 +57,21 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    body.resizing,
-    body.resizing * {
+    body.is-resizing,
+    body.is-resizing * {
       user-select: none !important;
       cursor: ew-resize !important;
+    }
+
+    body.is-resizing .sidebar,
+    body.is-resizing .main-container {
+      transition: none !important;
     }
 
     .sidebar-trigger {
       position: fixed;
       top: 16px;
-      left: 18px;
+      left: 16px;
       height: 32px;
       padding: 0 9px;
       display: flex;
@@ -78,7 +83,7 @@
       color: var(--text-secondary);
       font-size: 18px;
       font-weight: 300;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
       user-select: none;
       transition: background-color 0.2s ease, color 0.2s ease;
     }
@@ -93,7 +98,7 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 16px;
+      width: 14px;
       height: 100vh;
       z-index: 90;
     }
@@ -106,38 +111,36 @@
       height: 100vh;
       background-color: var(--bg-sidebar);
       border-right: 1px solid var(--border-subtle);
-      padding: 18px 14px 16px 14px;
+      padding: 18px 12px 14px 12px;
       display: flex;
       flex-direction: column;
       transform: translateX(-100%);
       transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease, border-color 0.25s ease;
       z-index: 95;
-      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.25);
+      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.22);
     }
 
     .sidebar.open {
       transform: translateX(0);
     }
 
-    body.resizing .sidebar,
-    body.resizing .main-container {
-      transition: none !important;
-    }
-
-    /* Ползунок изменения ширины (виден только когда панель зафиксирована) */
     .sidebar-resizer {
-      display: none;
       position: absolute;
       top: 0;
       right: -4px;
       width: 8px;
       height: 100%;
       cursor: ew-resize;
+      display: none;
       z-index: 105;
     }
 
+    body.sidebar-pinned .sidebar-resizer {
+      display: block;
+    }
+
     .sidebar-resizer::after {
-      content: '';
+      content: "";
       position: absolute;
       top: 0;
       left: 3px;
@@ -148,18 +151,14 @@
     }
 
     .sidebar-resizer:hover::after,
-    body.resizing .sidebar-resizer::after {
-      background-color: var(--text-secondary);
-    }
-
-    body.sidebar-pinned .sidebar-resizer {
-      display: block;
+    body.is-resizing .sidebar-resizer::after {
+      background-color: var(--border-focus);
     }
 
     .sidebar-header {
       display: flex;
       align-items: center;
-      padding-left: 52px;
+      padding-left: 44px;
       height: 28px;
       margin-bottom: 18px;
       overflow: hidden;
@@ -167,7 +166,7 @@
 
     .brand-title {
       font-family: 'Lora', Georgia, serif;
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 500;
       letter-spacing: 0.02em;
       color: var(--text-primary);
@@ -181,7 +180,7 @@
       align-items: center;
       gap: 10px;
       width: 100%;
-      padding: 9px 12px;
+      padding: 9px 10px;
       background: transparent;
       border: 1px solid transparent;
       border-radius: 8px;
@@ -216,6 +215,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      flex-shrink: 0;
       transition: background-color 0.15s ease, color 0.15s ease;
     }
 
@@ -328,7 +328,7 @@
       width: 100%;
       flex: 1;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
       margin-bottom: 16px;
       overflow-y: auto;
       padding-right: 6px;
@@ -339,25 +339,45 @@
     }
 
     .msg {
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 14.5px;
-      line-height: 1.55;
+      font-size: 15px;
+      line-height: 1.6;
       max-width: 85%;
       white-space: pre-wrap;
     }
 
     .msg.user {
       align-self: flex-end;
+      padding: 11px 16px;
+      border-radius: 12px;
       background-color: var(--bg-msg-user);
       color: var(--text-primary);
     }
 
+    /* Прозрачный баббл без рамки и без окантовки для ответов Ксенона */
     .msg.ai {
       align-self: flex-start;
+      padding: 4px 2px;
       background-color: transparent;
-      border: 1px solid var(--border-subtle);
+      border: none;
       color: var(--text-primary);
+      max-width: 92%;
+    }
+
+    /* Плавное проявление каждой напечатанной буквы */
+    .typed-char {
+      display: inline;
+      animation: charFadeIn 0.22s ease-out forwards;
+    }
+
+    @keyframes charFadeIn {
+      from {
+        opacity: 0;
+        filter: blur(1.5px);
+      }
+      to {
+        opacity: 1;
+        filter: blur(0);
+      }
     }
 
     .prompt-container {
@@ -536,7 +556,7 @@
   <div class="sidebar-trigger" id="sidebarTrigger" title="Меню">l l</div>
 
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-resizer" id="sidebarResizer"></div>
+    <div class="sidebar-resizer" id="sidebarResizer" title="Потяните для изменения ширины"></div>
 
     <div class="sidebar-header">
       <span class="brand-title">Ксенон</span>
@@ -591,6 +611,36 @@
   </main>
 
   <script>
+    // Генерация точной растровой иконки вкладки (16x16 и 32x32) 1-в-1 как на странице верификации
+    (function generateExactFavicon() {
+      const size = 32;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = '#E8EAED';
+
+      // Точные геометрические пропорции крестика: компактный размер внутри 32x32,
+      // четкие прямые перекладины толщиной 4px и длиной 16px, строго по пиксельной сетке
+      const armLength = 16;
+      const thickness = 4;
+      const offset = (size - armLength) / 2;   // 8
+      const centerPos = (size - thickness) / 2; // 14
+
+      // Вертикальная перекладина
+      ctx.fillRect(centerPos, offset, thickness, armLength);
+      // Горизонтальная перекладина
+      ctx.fillRect(offset, centerPos, armLength, thickness);
+
+      const pngUrl = canvas.toDataURL('image/png');
+      const link = document.getElementById('faviconLink');
+      if (link) {
+        link.href = pngUrl;
+      }
+    })();
+
     const greetingsByHour = {
       0: [
         "Полночь открывает чистый лист для идей.",
@@ -716,7 +766,7 @@
 
     function setRandomGreeting() {
       const currentHour = new Date().getHours();
-      const phrases = greetingsByHour[currentHour] || greetingsByHour[0];
+      const phrases = greetingsByHour[currentHour] || greetingsByHour[12];
       const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
       document.getElementById('greetingText').textContent = randomPhrase;
     }
@@ -740,8 +790,7 @@
       }
     }
 
-    const savedTheme = localStorage.getItem('xenon_theme');
-    if (savedTheme === 'light') {
+    if (localStorage.getItem('xenon_theme') === 'light') {
       applyTheme(true);
     }
 
@@ -751,32 +800,35 @@
       localStorage.setItem('xenon_theme', isLightNow ? 'light' : 'dark');
     });
 
-    // Логика боковой панели и регулировки ширины (10% - 20% экрана)
+    // Логика боковой панели и регулировки ширины (10% - 20%)
     const sidebar = document.getElementById('sidebar');
     const trigger = document.getElementById('sidebarTrigger');
     const hoverEdge = document.getElementById('hoverEdge');
     const resizer = document.getElementById('sidebarResizer');
+
     let isPinned = false;
     let isResizing = false;
+    let savedWidthPercent = parseFloat(localStorage.getItem('xenon_sidebar_pct')) || 15;
 
-    function getDefaultSidebarWidth() {
-      const vw = window.innerWidth;
-      const minW = vw * 0.10;
-      const maxW = vw * 0.20;
-      const saved = parseFloat(localStorage.getItem('xenon_sidebar_w'));
-      if (!isNaN(saved) && saved >= minW && saved <= maxW) {
-        return saved;
-      }
-      return Math.min(Math.max(250, minW), maxW);
+    function clampSidebarPercent(pct) {
+      return Math.min(20, Math.max(10, pct));
     }
 
-    function setSidebarWidth(px) {
-      document.documentElement.style.setProperty('--sidebar-width', px + 'px');
+    function applySidebarWidth(pct) {
+      const clamped = clampSidebarPercent(pct);
+      const pxWidth = Math.round((window.innerWidth * clamped) / 100);
+      document.documentElement.style.setProperty('--sidebar-width', pxWidth + 'px');
+      return clamped;
     }
 
-    setSidebarWidth(getDefaultSidebarWidth());
+    savedWidthPercent = applySidebarWidth(savedWidthPercent);
+
+    window.addEventListener('resize', () => {
+      applySidebarWidth(savedWidthPercent);
+    });
 
     function openSidebar() {
+      applySidebarWidth(savedWidthPercent);
       sidebar.classList.add('open');
     }
 
@@ -788,9 +840,11 @@
 
     function unpinAndCloseSidebar() {
       isPinned = false;
-      sidebar.classList.remove('open');
-      trigger.classList.remove('pinned');
+      isResizing = false;
+      document.body.classList.remove('is-resizing');
       document.body.classList.remove('sidebar-pinned');
+      trigger.classList.remove('pinned');
+      sidebar.classList.remove('open');
     }
 
     trigger.addEventListener('mouseenter', openSidebar);
@@ -800,7 +854,7 @@
     trigger.addEventListener('click', () => {
       isPinned = !isPinned;
       if (isPinned) {
-        setSidebarWidth(getDefaultSidebarWidth());
+        applySidebarWidth(savedWidthPercent);
         sidebar.classList.add('open');
         trigger.classList.add('pinned');
         document.body.classList.add('sidebar-pinned');
@@ -809,50 +863,33 @@
       }
     });
 
-    // Перетаскивание правого края зафиксированной панели
+    // Перетягивание правого края зафиксированной панели
     resizer.addEventListener('mousedown', (e) => {
       if (!isPinned) return;
       e.preventDefault();
       isResizing = true;
-      document.body.classList.add('resizing');
+      document.body.classList.add('is-resizing');
     });
 
-    window.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', (e) => {
       if (!isResizing) return;
-      const vw = window.innerWidth;
-      const minW = vw * 0.10;
-      const maxW = vw * 0.20;
-      const currentX = e.clientX;
 
-      // Если пользователь толкает панель левее 10% ширины экрана — сворачиваем её
-      if (currentX < minW) {
-        isResizing = false;
-        document.body.classList.remove('resizing');
+      const currentPercent = (e.clientX / window.innerWidth) * 100;
+
+      // Порог закрытия: 50% от минимальной ширины (10% * 0.5 = 5% ширины окна)
+      if (currentPercent <= 5) {
         unpinAndCloseSidebar();
         return;
       }
 
-      const clampedWidth = Math.min(currentX, maxW);
-      setSidebarWidth(clampedWidth);
-      localStorage.setItem('xenon_sidebar_w', clampedWidth);
+      savedWidthPercent = applySidebarWidth(currentPercent);
+      localStorage.setItem('xenon_sidebar_pct', savedWidthPercent.toFixed(2));
     });
 
-    window.addEventListener('mouseup', () => {
+    document.addEventListener('mouseup', () => {
       if (isResizing) {
         isResizing = false;
-        document.body.classList.remove('resizing');
-      }
-    });
-
-    window.addEventListener('resize', () => {
-      if (isPinned) {
-        const vw = window.innerWidth;
-        const minW = vw * 0.10;
-        const maxW = vw * 0.20;
-        const currentW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
-        if (currentW < minW || currentW > maxW) {
-          setSidebarWidth(Math.min(Math.max(currentW, minW), maxW));
-        }
+        document.body.classList.remove('is-resizing');
       }
     });
 
@@ -909,11 +946,32 @@
       });
     }
 
-    // Авто-высота поля и отправка сообщения
+    // Плавная посимвольная печать ответа Ксенона
     const mainContainer = document.getElementById('mainContainer');
     const messagesArea = document.getElementById('messagesArea');
     const greetingBox = document.getElementById('greetingBox');
     const newChatBtn = document.getElementById('newChatBtn');
+    let activeTypingTimers = [];
+
+    function typeMessageSmoothly(container, fullText) {
+      let index = 0;
+      const chars = Array.from(fullText);
+
+      const timer = setInterval(() => {
+        if (index >= chars.length) {
+          clearInterval(timer);
+          return;
+        }
+        const span = document.createElement('span');
+        span.className = 'typed-char';
+        span.textContent = chars[index];
+        container.appendChild(span);
+        index++;
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+      }, 16);
+
+      activeTypingTimers.push(timer);
+    }
 
     promptInput.addEventListener('input', function () {
       this.style.height = 'auto';
@@ -940,10 +998,12 @@
 
       const aiMsg = document.createElement('div');
       aiMsg.className = 'msg ai';
-      aiMsg.textContent = 'Ксенон: Интерфейс готов к работе. Подключите API-ключ для запуска агентов.';
       messagesArea.appendChild(aiMsg);
 
       messagesArea.scrollTop = messagesArea.scrollHeight;
+
+      const replyText = 'Интерфейс готов к работе. Подключите API-ключ для запуска агентов.';
+      typeMessageSmoothly(aiMsg, replyText);
 
       promptInput.value = '';
       promptInput.style.height = 'auto';
@@ -962,6 +1022,8 @@
     });
 
     newChatBtn.addEventListener('click', () => {
+      activeTypingTimers.forEach(t => clearInterval(t));
+      activeTypingTimers = [];
       messagesArea.innerHTML = '';
       messagesArea.classList.remove('active');
       mainContainer.classList.remove('chat-started');
