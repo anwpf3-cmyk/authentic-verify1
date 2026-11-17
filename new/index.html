@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ксенон</title>
-  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 5v22M5 16h22' stroke='white' stroke-width='6' stroke-linecap='round'/></svg>" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 5v22M5 16h22' stroke='white' stroke-width='6' stroke-linecap='round'/></svg>" />
+  <title>Новый чат</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 2.8v10.4M2.8 8h10.4' stroke='%23ECECEE' stroke-width='2.7' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-main: #18191B;
@@ -20,6 +22,7 @@
       --send-btn-bg: #FFFFFF;
       --send-btn-color: #000000;
       --shadow-input: 0 8px 24px rgba(0, 0, 0, 0.2);
+      --sidebar-width: 250px;
     }
 
     body.light-theme {
@@ -46,7 +49,7 @@
     body {
       background-color: var(--bg-main);
       color: var(--text-primary);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       height: 100vh;
       overflow: hidden;
       display: flex;
@@ -54,12 +57,18 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
+    body.resizing,
+    body.resizing * {
+      user-select: none !important;
+      cursor: ew-resize !important;
+    }
+
     .sidebar-trigger {
       position: fixed;
       top: 16px;
       left: 18px;
-      width: 32px;
       height: 32px;
+      padding: 0 9px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -67,8 +76,9 @@
       z-index: 100;
       border-radius: 8px;
       color: var(--text-secondary);
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 300;
+      letter-spacing: 1px;
       user-select: none;
       transition: background-color 0.2s ease, color 0.2s ease;
     }
@@ -92,11 +102,11 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 250px;
+      width: var(--sidebar-width);
       height: 100vh;
       background-color: var(--bg-sidebar);
       border-right: 1px solid var(--border-subtle);
-      padding: 18px 14px 14px 14px;
+      padding: 18px 14px 16px 14px;
       display: flex;
       flex-direction: column;
       transform: translateX(-100%);
@@ -109,20 +119,61 @@
       transform: translateX(0);
     }
 
+    body.resizing .sidebar,
+    body.resizing .main-container {
+      transition: none !important;
+    }
+
+    /* Ползунок изменения ширины (виден только когда панель зафиксирована) */
+    .sidebar-resizer {
+      display: none;
+      position: absolute;
+      top: 0;
+      right: -4px;
+      width: 8px;
+      height: 100%;
+      cursor: ew-resize;
+      z-index: 105;
+    }
+
+    .sidebar-resizer::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 3px;
+      width: 2px;
+      height: 100%;
+      background-color: transparent;
+      transition: background-color 0.15s ease;
+    }
+
+    .sidebar-resizer:hover::after,
+    body.resizing .sidebar-resizer::after {
+      background-color: var(--text-secondary);
+    }
+
+    body.sidebar-pinned .sidebar-resizer {
+      display: block;
+    }
+
     .sidebar-header {
       display: flex;
       align-items: center;
-      padding-left: 42px;
+      padding-left: 52px;
       height: 28px;
       margin-bottom: 18px;
+      overflow: hidden;
     }
 
     .brand-title {
-      font-family: Georgia, 'Times New Roman', serif;
+      font-family: 'Lora', Georgia, serif;
       font-size: 19px;
       font-weight: 500;
       letter-spacing: 0.02em;
       color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .new-chat-btn {
@@ -137,6 +188,8 @@
       color: var(--text-primary);
       font-size: 13.5px;
       cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
       transition: background-color 0.15s ease;
     }
 
@@ -194,7 +247,7 @@
     }
 
     body.sidebar-pinned .main-container {
-      margin-left: 250px;
+      margin-left: var(--sidebar-width);
     }
 
     .center-wrapper {
@@ -243,7 +296,7 @@
       text-shadow:
         0 0 4px rgba(255, 255, 255, 1),
         0 0 12px rgba(255, 255, 255, 0.95),
-        0 0 22px rgba(160, 170, 190, 0.85);
+        0 0 22px rgba(180, 190, 210, 0.85);
     }
 
     @keyframes pulseGlow {
@@ -262,7 +315,7 @@
     }
 
     .greeting-text {
-      font-family: Georgia, 'Times New Roman', serif;
+      font-family: 'Lora', Georgia, serif;
       font-size: 27px;
       font-weight: 400;
       color: var(--text-primary);
@@ -371,7 +424,7 @@
       border: none;
       outline: none;
       color: var(--text-primary);
-      font-family: inherit;
+      font-family: 'Inter', sans-serif;
       font-size: 15px;
       line-height: 1.5;
       resize: none;
@@ -436,7 +489,7 @@
       background-color: var(--send-btn-bg);
       border: none;
       color: var(--send-btn-color);
-      font-family: inherit;
+      font-family: 'Inter', sans-serif;
       font-size: 18px;
       font-weight: 600;
       display: flex;
@@ -480,9 +533,11 @@
 <body>
 
   <div class="hover-edge-zone" id="hoverEdge"></div>
-  <div class="sidebar-trigger" id="sidebarTrigger" title="Меню">l</div>
+  <div class="sidebar-trigger" id="sidebarTrigger" title="Меню">l l</div>
 
   <aside class="sidebar" id="sidebar">
+    <div class="sidebar-resizer" id="sidebarResizer"></div>
+
     <div class="sidebar-header">
       <span class="brand-title">Ксенон</span>
     </div>
@@ -668,6 +723,7 @@
 
     setRandomGreeting();
 
+    // Переключатель темы
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const iconSun = document.getElementById('iconSun');
     const iconMoon = document.getElementById('iconMoon');
@@ -684,7 +740,8 @@
       }
     }
 
-    if (localStorage.getItem('xenon_theme') === 'light') {
+    const savedTheme = localStorage.getItem('xenon_theme');
+    if (savedTheme === 'light') {
       applyTheme(true);
     }
 
@@ -694,19 +751,46 @@
       localStorage.setItem('xenon_theme', isLightNow ? 'light' : 'dark');
     });
 
+    // Логика боковой панели и регулировки ширины (10% - 20% экрана)
     const sidebar = document.getElementById('sidebar');
     const trigger = document.getElementById('sidebarTrigger');
     const hoverEdge = document.getElementById('hoverEdge');
+    const resizer = document.getElementById('sidebarResizer');
     let isPinned = false;
+    let isResizing = false;
+
+    function getDefaultSidebarWidth() {
+      const vw = window.innerWidth;
+      const minW = vw * 0.10;
+      const maxW = vw * 0.20;
+      const saved = parseFloat(localStorage.getItem('xenon_sidebar_w'));
+      if (!isNaN(saved) && saved >= minW && saved <= maxW) {
+        return saved;
+      }
+      return Math.min(Math.max(250, minW), maxW);
+    }
+
+    function setSidebarWidth(px) {
+      document.documentElement.style.setProperty('--sidebar-width', px + 'px');
+    }
+
+    setSidebarWidth(getDefaultSidebarWidth());
 
     function openSidebar() {
       sidebar.classList.add('open');
     }
 
     function closeSidebar() {
-      if (!isPinned) {
+      if (!isPinned && !isResizing) {
         sidebar.classList.remove('open');
       }
+    }
+
+    function unpinAndCloseSidebar() {
+      isPinned = false;
+      sidebar.classList.remove('open');
+      trigger.classList.remove('pinned');
+      document.body.classList.remove('sidebar-pinned');
     }
 
     trigger.addEventListener('mouseenter', openSidebar);
@@ -716,16 +800,63 @@
     trigger.addEventListener('click', () => {
       isPinned = !isPinned;
       if (isPinned) {
+        setSidebarWidth(getDefaultSidebarWidth());
         sidebar.classList.add('open');
         trigger.classList.add('pinned');
         document.body.classList.add('sidebar-pinned');
       } else {
-        sidebar.classList.remove('open');
-        trigger.classList.remove('pinned');
-        document.body.classList.remove('sidebar-pinned');
+        unpinAndCloseSidebar();
       }
     });
 
+    // Перетаскивание правого края зафиксированной панели
+    resizer.addEventListener('mousedown', (e) => {
+      if (!isPinned) return;
+      e.preventDefault();
+      isResizing = true;
+      document.body.classList.add('resizing');
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      const vw = window.innerWidth;
+      const minW = vw * 0.10;
+      const maxW = vw * 0.20;
+      const currentX = e.clientX;
+
+      // Если пользователь толкает панель левее 10% ширины экрана — сворачиваем её
+      if (currentX < minW) {
+        isResizing = false;
+        document.body.classList.remove('resizing');
+        unpinAndCloseSidebar();
+        return;
+      }
+
+      const clampedWidth = Math.min(currentX, maxW);
+      setSidebarWidth(clampedWidth);
+      localStorage.setItem('xenon_sidebar_w', clampedWidth);
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        document.body.classList.remove('resizing');
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (isPinned) {
+        const vw = window.innerWidth;
+        const minW = vw * 0.10;
+        const maxW = vw * 0.20;
+        const currentW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
+        if (currentW < minW || currentW > maxW) {
+          setSidebarWidth(Math.min(Math.max(currentW, minW), maxW));
+        }
+      }
+    });
+
+    // Управление видимостью кнопки "^"
     const promptInput = document.getElementById('promptInput');
     const sendBtn = document.getElementById('sendBtn');
     let selectedFiles = [];
@@ -740,6 +871,7 @@
       }
     }
 
+    // Прикрепление файлов
     const attachBtn = document.getElementById('attachBtn');
     const fileInput = document.getElementById('fileInput');
     const attachedFilesBox = document.getElementById('attachedFiles');
@@ -777,6 +909,7 @@
       });
     }
 
+    // Авто-высота поля и отправка сообщения
     const mainContainer = document.getElementById('mainContainer');
     const messagesArea = document.getElementById('messagesArea');
     const greetingBox = document.getElementById('greetingBox');
