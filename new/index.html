@@ -4,14 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ксенон</title>
-  <!-- Точный значок вкладки (толстый белый крестик со скругленными краями) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://w3.org' viewBox='0 0 32 32'%3E%3Cpath d='M16 6V26M6 16H26' stroke='%23FFFFFF' stroke-width='5.5' stroke-linecap='round'/%3E%3C/svg%3E" />
-  <link rel="preconnect" href="https://googleapis.com">
-  <link rel="preconnect" href="https://gstatic.com" crossorigin>
-  <link href="https://googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 5v22M5 16h22' stroke='white' stroke-width='6' stroke-linecap='round'/></svg>" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 5v22M5 16h22' stroke='white' stroke-width='6' stroke-linecap='round'/></svg>" />
   <style>
     :root {
-      /* Тёмная тема (по умолчанию) */
       --bg-main: #18191B;
       --bg-sidebar: #131416;
       --bg-input: #222428;
@@ -26,7 +22,6 @@
       --shadow-input: 0 8px 24px rgba(0, 0, 0, 0.2);
     }
 
-    /* Светлая тема в светло-серых оттенках */
     body.light-theme {
       --bg-main: #E2E4E8;
       --bg-sidebar: #D6D9DF;
@@ -51,7 +46,7 @@
     body {
       background-color: var(--bg-main);
       color: var(--text-primary);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, sans-serif;
       height: 100vh;
       overflow: hidden;
       display: flex;
@@ -59,7 +54,6 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* Кнопка-символ "l" в левом верхнем углу */
     .sidebar-trigger {
       position: fixed;
       top: 16px;
@@ -94,16 +88,15 @@
       z-index: 90;
     }
 
-    /* Выдвижная боковая панель */
     .sidebar {
       position: fixed;
       top: 0;
       left: 0;
-      width: 260px;
+      width: 250px;
       height: 100vh;
       background-color: var(--bg-sidebar);
       border-right: 1px solid var(--border-subtle);
-      padding: 18px 14px 16px 14px;
+      padding: 18px 14px 14px 14px;
       display: flex;
       flex-direction: column;
       transform: translateX(-100%);
@@ -125,14 +118,13 @@
     }
 
     .brand-title {
-      font-family: 'Lora', Georgia, serif;
+      font-family: Georgia, 'Times New Roman', serif;
       font-size: 19px;
       font-weight: 500;
       letter-spacing: 0.02em;
       color: var(--text-primary);
     }
 
-    /* Кнопка "Новый чат" с прозрачной окантовкой */
     .new-chat-btn {
       display: flex;
       align-items: center;
@@ -152,7 +144,6 @@
       background-color: var(--bg-hover);
     }
 
-    /* Нижний футер панели с миниатюрной кнопкой темы в правом нижнем углу */
     .sidebar-footer {
       margin-top: auto;
       display: flex;
@@ -190,7 +181,6 @@
       stroke-linejoin: round;
     }
 
-    /* Основная рабочая область */
     .main-container {
       flex: 1;
       display: flex;
@@ -204,7 +194,7 @@
     }
 
     body.sidebar-pinned .main-container {
-      margin-left: 260px;
+      margin-left: 250px;
     }
 
     .center-wrapper {
@@ -216,7 +206,6 @@
       transition: all 0.25s ease;
     }
 
-    /* Режим активного чата (когда сообщение отправлено) */
     .main-container.chat-started {
       justify-content: flex-end;
       padding-top: 56px;
@@ -228,7 +217,6 @@
       justify-content: space-between;
     }
 
-    /* Блок приветствия */
     .greeting-box {
       display: flex;
       align-items: center;
@@ -238,7 +226,6 @@
       text-align: center;
     }
 
-    /* Неоновый белый "+" (остается неоново-белым и в светлой теме) */
     .neon-plus {
       font-size: 28px;
       font-weight: 400;
@@ -256,7 +243,7 @@
       text-shadow:
         0 0 4px rgba(255, 255, 255, 1),
         0 0 12px rgba(255, 255, 255, 0.95),
-        0 0 22px rgba(180, 190, 210, 0.85);
+        0 0 22px rgba(160, 170, 190, 0.85);
     }
 
     @keyframes pulseGlow {
@@ -275,7 +262,7 @@
     }
 
     .greeting-text {
-      font-family: 'Lora', Georgia, serif;
+      font-family: Georgia, 'Times New Roman', serif;
       font-size: 27px;
       font-weight: 400;
       color: var(--text-primary);
@@ -283,7 +270,6 @@
       line-height: 1.3;
     }
 
-    /* Область сообщений */
     .messages-area {
       display: none;
       width: 100%;
@@ -321,7 +307,6 @@
       color: var(--text-primary);
     }
 
-    /* Поле ввода (начальный вид по центру) */
     .prompt-container {
       width: 100%;
       background-color: var(--bg-input);
@@ -339,7 +324,6 @@
       border-color: var(--border-focus);
     }
 
-    /* Компактный вид поля ввода внизу экрана после отправки сообщения */
     .main-container.chat-started .prompt-container {
       flex-direction: row;
       flex-wrap: wrap;
@@ -387,12 +371,14 @@
       border: none;
       outline: none;
       color: var(--text-primary);
-      font-family: 'Inter', sans-serif;
+      font-family: inherit;
       font-size: 15px;
       line-height: 1.5;
       resize: none;
       min-height: 44px;
-    /* В компактном режиме текстовое поле становится в одну строку между "+" и "^" */
+      max-height: 200px;
+    }
+
     .main-container.chat-started .prompt-textarea {
       flex: 1;
       width: auto;
@@ -413,7 +399,6 @@
       width: 100%;
     }
 
-    /* В компактном режиме нижняя панель "растворяется", расставляя кнопки по краям строки */
     .main-container.chat-started .prompt-bottom-bar {
       display: contents;
     }
@@ -444,7 +429,6 @@
       color: var(--text-primary);
     }
 
-    /* Кнопка отправки "^" — скрыта, пока в поле нет символов */
     .send-btn {
       width: 32px;
       height: 32px;
@@ -452,7 +436,7 @@
       background-color: var(--send-btn-bg);
       border: none;
       color: var(--send-btn-color);
-      font-family: 'Inter', sans-serif;
+      font-family: inherit;
       font-size: 18px;
       font-weight: 600;
       display: flex;
@@ -677,14 +661,13 @@
 
     function setRandomGreeting() {
       const currentHour = new Date().getHours();
-      const phrases = greetingsByHour[currentHour] || greetingsByHour;
+      const phrases = greetingsByHour[currentHour] || greetingsByHour[0];
       const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
       document.getElementById('greetingText').textContent = randomPhrase;
     }
 
     setRandomGreeting();
 
-    // Переключатель темы
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const iconSun = document.getElementById('iconSun');
     const iconMoon = document.getElementById('iconMoon');
@@ -701,14 +684,18 @@
       }
     }
 
-    const savedTheme = localStorage.getItem('xenon_theme');
-    if (savedTheme === 'light') {
+    if (localStorage.getItem('xenon_theme') === 'light') {
       applyTheme(true);
     }
 
     themeToggleBtn.addEventListener('click', () => {
       const isLightNow = !document.body.classList.contains('light-theme');
       applyTheme(isLightNow);
+      localStorage.setItem('xenon_theme', isLightNow ? 'light' : 'dark');
+    });
+
+    const sidebar = document.getElementById('sidebar');
+    const trigger = document.getElementById('sidebarTrigger');
     const hoverEdge = document.getElementById('hoverEdge');
     let isPinned = false;
 
@@ -739,7 +726,6 @@
       }
     });
 
-    // Управление видимостью кнопки "^"
     const promptInput = document.getElementById('promptInput');
     const sendBtn = document.getElementById('sendBtn');
     let selectedFiles = [];
@@ -754,7 +740,6 @@
       }
     }
 
-    // Прикрепление файлов
     const attachBtn = document.getElementById('attachBtn');
     const fileInput = document.getElementById('fileInput');
     const attachedFilesBox = document.getElementById('attachedFiles');
@@ -792,7 +777,6 @@
       });
     }
 
-    // Авто-высота поля и отправка сообщения
     const mainContainer = document.getElementById('mainContainer');
     const messagesArea = document.getElementById('messagesArea');
     const greetingBox = document.getElementById('greetingBox');
@@ -815,7 +799,8 @@
       const userMsg = document.createElement('div');
       userMsg.className = 'msg user';
       const fileNames = selectedFiles.length
-        ? `\n[Файлы: ${selectedFiles.map(f => f.name).join(', ')}]`
+        ? `
+[Файлы: ${selectedFiles.map(f => f.name).join(', ')}]`
         : '';
       userMsg.textContent = text.trim() + fileNames;
       messagesArea.appendChild(userMsg);
@@ -843,7 +828,6 @@
       }
     });
 
-    // Сброс в начальный режим по клику на "Новый чат"
     newChatBtn.addEventListener('click', () => {
       messagesArea.innerHTML = '';
       messagesArea.classList.remove('active');
