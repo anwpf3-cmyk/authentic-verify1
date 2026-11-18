@@ -4,40 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Новый чат</title>
-  <link id="faviconLink" rel="icon" type="image/png" />
+  <link id="favicon" rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAOklEQVR4nGNgGAWjgPpg165d/1H569evJ14NxGsASQYgawBJA0gxgGQDyDaAZAPIaQDpBpDUgFEAAwCTuQ1X520n1wAAAABJRU5ErkJggg==" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-main: #18191B;
-      --bg-sidebar: #131416;
-      --bg-input: #222428;
-      --bg-hover: #2A2D32;
-      --bg-msg-user: #2B2E34;
-      --border-subtle: #2E3136;
-      --border-focus: #454952;
-      --text-primary: #ECECEE;
-      --text-secondary: #8E929B;
-      --send-btn-bg: #FFFFFF;
-      --send-btn-color: #000000;
-      --shadow-input: 0 8px 24px rgba(0, 0, 0, 0.2);
-      --sidebar-width: 240px;
+      /* Тёплая графитово-серая тёмная тема */
+      --bg-main: #1C1B19;
+      --bg-sidebar: #161513;
+      --bg-input: #252421;
+      --bg-hover: #2E2C29;
+      --bg-msg-user: #2F2D2A;
+      --border-subtle: #33312E;
+      --border-focus: #4B4843;
+      --text-primary: #ECEAE6;
+      --text-secondary: #98938B;
+      --send-btn-bg: #F4F2EE;
+      --send-btn-color: #161513;
+      --shadow-input: 0 8px 24px rgba(0, 0, 0, 0.16);
+      --sb-width: 240px;
     }
 
+    /* Тёплая лаконичная светло-серая тема (не белая) */
     body.light-theme {
-      --bg-main: #E2E4E8;
-      --bg-sidebar: #D6D9DF;
-      --bg-input: #ECEEF1;
-      --bg-hover: #C9CDD4;
-      --bg-msg-user: #D2D5DC;
-      --border-subtle: #C2C6CE;
-      --border-focus: #A6ACB8;
-      --text-primary: #1F2227;
-      --text-secondary: #5F6572;
-      --send-btn-bg: #FFFFFF;
-      --send-btn-color: #000000;
-      --shadow-input: 0 6px 20px rgba(0, 0, 0, 0.06);
+      --bg-main: #D7D4CE;
+      --bg-sidebar: #CDC9C2;
+      --bg-input: #DFDCD6;
+      --bg-hover: #C2BEB6;
+      --bg-msg-user: #C7C3BB;
+      --border-subtle: #B8B4AC;
+      --border-focus: #9E9A92;
+      --text-primary: #22201D;
+      --text-secondary: #635F58;
+      --send-btn-bg: #22201D;
+      --send-btn-color: #ECEAE6;
+      --shadow-input: 0 6px 20px rgba(0, 0, 0, 0.04);
     }
 
     * {
@@ -57,41 +59,44 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    body.is-resizing,
-    body.is-resizing * {
-      user-select: none !important;
-      cursor: ew-resize !important;
+    body.resizing {
+      user-select: none;
+      cursor: ew-resize;
     }
 
-    body.is-resizing .sidebar,
-    body.is-resizing .main-container {
-      transition: none !important;
-    }
-
+    /* Кнопка-символ "l l" в левом верхнем углу без какого-либо выделения */
     .sidebar-trigger {
       position: fixed;
       top: 16px;
       left: 16px;
+      width: 32px;
       height: 32px;
-      padding: 0 9px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       z-index: 100;
-      border-radius: 8px;
       color: var(--text-secondary);
-      font-size: 18px;
-      font-weight: 300;
-      letter-spacing: 2px;
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      padding-left: 3px;
       user-select: none;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      background: transparent !important;
+      outline: none !important;
+      box-shadow: none !important;
+      border: none !important;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .sidebar-trigger:hover,
+    .sidebar-trigger:active,
+    .sidebar-trigger:focus,
     .sidebar-trigger.pinned {
-      background-color: var(--bg-hover);
-      color: var(--text-primary);
+      background: transparent !important;
+      color: var(--text-secondary);
+      outline: none !important;
+      box-shadow: none !important;
     }
 
     .hover-edge-zone {
@@ -103,84 +108,73 @@
       z-index: 90;
     }
 
+    /* Выдвижная боковая панель строго без тени, только тонкая полосочка границы */
     .sidebar {
       position: fixed;
       top: 0;
       left: 0;
-      width: var(--sidebar-width);
+      width: var(--sb-width);
       height: 100vh;
       background-color: var(--bg-sidebar);
       border-right: 1px solid var(--border-subtle);
-      padding: 18px 12px 14px 12px;
+      box-shadow: none !important;
+      padding: 18px 14px 14px 14px;
       display: flex;
       flex-direction: column;
       transform: translateX(-100%);
       transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease, border-color 0.25s ease;
       z-index: 95;
-      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.22);
+    }
+
+    body.resizing .sidebar {
+      transition: none;
     }
 
     .sidebar.open {
       transform: translateX(0);
     }
 
-    .sidebar-resizer {
+    /* Полоска для изменения ширины панели */
+    .resize-handle {
       position: absolute;
       top: 0;
-      right: -4px;
-      width: 8px;
+      right: -3px;
+      width: 6px;
       height: 100%;
       cursor: ew-resize;
       display: none;
       z-index: 105;
     }
 
-    body.sidebar-pinned .sidebar-resizer {
+    body.sidebar-pinned .resize-handle {
       display: block;
-    }
-
-    .sidebar-resizer::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 3px;
-      width: 2px;
-      height: 100%;
-      background-color: transparent;
-      transition: background-color 0.15s ease;
-    }
-
-    .sidebar-resizer:hover::after,
-    body.is-resizing .sidebar-resizer::after {
-      background-color: var(--border-focus);
     }
 
     .sidebar-header {
       display: flex;
       align-items: center;
-      padding-left: 44px;
+      padding-left: 40px;
       height: 28px;
       margin-bottom: 18px;
       overflow: hidden;
+      white-space: nowrap;
     }
 
     .brand-title {
       font-family: 'Lora', Georgia, serif;
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 500;
       letter-spacing: 0.02em;
       color: var(--text-primary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
+    /* Кнопка "Новый чат" с прозрачной окантовкой */
     .new-chat-btn {
       display: flex;
       align-items: center;
       gap: 10px;
       width: 100%;
-      padding: 9px 10px;
+      padding: 9px 12px;
       background: transparent;
       border: 1px solid transparent;
       border-radius: 8px;
@@ -196,6 +190,7 @@
       background-color: var(--bg-hover);
     }
 
+    /* Нижний футер панели с миниатюрной кнопкой темы */
     .sidebar-footer {
       margin-top: auto;
       display: flex;
@@ -209,13 +204,12 @@
       height: 28px;
       border-radius: 7px;
       background: transparent;
-      border: 1px solid transparent;
+      border: none;
       color: var(--text-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      flex-shrink: 0;
       transition: background-color 0.15s ease, color 0.15s ease;
     }
 
@@ -234,6 +228,7 @@
       stroke-linejoin: round;
     }
 
+    /* Основная рабочая область */
     .main-container {
       flex: 1;
       display: flex;
@@ -246,8 +241,12 @@
       height: 100vh;
     }
 
+    body.resizing .main-container {
+      transition: none;
+    }
+
     body.sidebar-pinned .main-container {
-      margin-left: var(--sidebar-width);
+      margin-left: var(--sb-width);
     }
 
     .center-wrapper {
@@ -270,6 +269,7 @@
       justify-content: space-between;
     }
 
+    /* Блок приветствия */
     .greeting-box {
       display: flex;
       align-items: center;
@@ -279,6 +279,7 @@
       text-align: center;
     }
 
+    /* Белый неоновый "+" (сохраняет неоново-белое свечение в обеих темах) */
     .neon-plus {
       font-size: 28px;
       font-weight: 400;
@@ -296,7 +297,7 @@
       text-shadow:
         0 0 4px rgba(255, 255, 255, 1),
         0 0 12px rgba(255, 255, 255, 0.95),
-        0 0 22px rgba(180, 190, 210, 0.85);
+        0 0 22px rgba(160, 155, 148, 0.85);
     }
 
     @keyframes pulseGlow {
@@ -323,6 +324,7 @@
       line-height: 1.3;
     }
 
+    /* Область сообщений */
     .messages-area {
       display: none;
       width: 100%;
@@ -348,31 +350,29 @@
     .msg.user {
       align-self: flex-end;
       padding: 11px 16px;
-      border-radius: 12px;
+      border-radius: 14px;
       background-color: var(--bg-msg-user);
       color: var(--text-primary);
     }
 
-    /* Прозрачный баббл без рамки и без окантовки для ответов Ксенона */
+    /* Прозрачный баббл ассистента без окантовки */
     .msg.ai {
       align-self: flex-start;
       padding: 4px 2px;
-      background-color: transparent;
-      border: none;
+      background: transparent !important;
+      border: none !important;
       color: var(--text-primary);
-      max-width: 92%;
     }
 
-    /* Плавное проявление каждой напечатанной буквы */
-    .typed-char {
+    .char-fade {
       display: inline;
-      animation: charFadeIn 0.22s ease-out forwards;
+      animation: charAppear 0.18s ease-out forwards;
     }
 
-    @keyframes charFadeIn {
+    @keyframes charAppear {
       from {
         opacity: 0;
-        filter: blur(1.5px);
+        filter: blur(1px);
       }
       to {
         opacity: 1;
@@ -380,6 +380,7 @@
       }
     }
 
+    /* Поле ввода */
     .prompt-container {
       width: 100%;
       background-color: var(--bg-input);
@@ -401,7 +402,7 @@
       flex-direction: row;
       flex-wrap: wrap;
       align-items: center;
-      padding: 8px 10px 8px 10px;
+      padding: 8px 10px;
       border-radius: 14px;
       gap: 8px;
     }
@@ -512,23 +513,17 @@
       font-family: 'Inter', sans-serif;
       font-size: 18px;
       font-weight: 600;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       padding-top: 4px;
       flex-shrink: 0;
       margin-left: auto;
-      opacity: 0;
-      visibility: hidden;
-      transform: scale(0.88);
-      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
     }
 
     .send-btn.visible {
-      opacity: 1;
-      visibility: visible;
-      transform: scale(1);
+      display: flex;
     }
 
     .main-container.chat-started .send-btn {
@@ -553,10 +548,10 @@
 <body>
 
   <div class="hover-edge-zone" id="hoverEdge"></div>
-  <div class="sidebar-trigger" id="sidebarTrigger" title="Меню">l l</div>
+  <div class="sidebar-trigger" id="sidebarTrigger">l l</div>
 
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-resizer" id="sidebarResizer" title="Потяните для изменения ширины"></div>
+    <div class="resize-handle" id="resizeHandle"></div>
 
     <div class="sidebar-header">
       <span class="brand-title">Ксенон</span>
@@ -611,36 +606,26 @@
   </main>
 
   <script>
-    // Генерация точной растровой иконки вкладки (16x16 и 32x32) 1-в-1 как на странице верификации
+    // 1. Попиксельная генерация точного логотипа вкладки 16x16 (идентично соседней вкладке)
     (function generateExactFavicon() {
-      const size = 32;
       const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
+      canvas.width = 16;
+      canvas.height = 16;
       const ctx = canvas.getContext('2d');
-
-      ctx.clearRect(0, 0, size, size);
+      ctx.clearRect(0, 0, 16, 16);
       ctx.fillStyle = '#E8EAED';
+      // Вертикальная перекладина 10px высотой, 2px толщиной, строго по центру (x: 7..8, y: 3..12)
+      ctx.fillRect(7, 3, 2, 10);
+      // Горизонтальная перекладина 10px шириной, 2px толщиной, строго по центру (x: 3..12, y: 7..8)
+      ctx.fillRect(3, 7, 10, 2);
 
-      // Точные геометрические пропорции крестика: компактный размер внутри 32x32,
-      // четкие прямые перекладины толщиной 4px и длиной 16px, строго по пиксельной сетке
-      const armLength = 16;
-      const thickness = 4;
-      const offset = (size - armLength) / 2;   // 8
-      const centerPos = (size - thickness) / 2; // 14
-
-      // Вертикальная перекладина
-      ctx.fillRect(centerPos, offset, thickness, armLength);
-      // Горизонтальная перекладина
-      ctx.fillRect(offset, centerPos, armLength, thickness);
-
-      const pngUrl = canvas.toDataURL('image/png');
-      const link = document.getElementById('faviconLink');
+      const link = document.getElementById('favicon');
       if (link) {
-        link.href = pngUrl;
+        link.href = canvas.toDataURL('image/png');
       }
     })();
 
+    // 2. Случайные приветствия по часам
     const greetingsByHour = {
       0: [
         "Полночь открывает чистый лист для идей.",
@@ -773,7 +758,7 @@
 
     setRandomGreeting();
 
-    // Переключатель темы
+    // 3. Переключатель темы
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const iconSun = document.getElementById('iconSun');
     const iconMoon = document.getElementById('iconMoon');
@@ -800,35 +785,40 @@
       localStorage.setItem('xenon_theme', isLightNow ? 'light' : 'dark');
     });
 
-    // Логика боковой панели и регулировки ширины (10% - 20%)
+    // 4. Логика выдвижной и регулируемой боковой панели (10% - 20%, порог закрытия 50% от минимума)
     const sidebar = document.getElementById('sidebar');
     const trigger = document.getElementById('sidebarTrigger');
     const hoverEdge = document.getElementById('hoverEdge');
-    const resizer = document.getElementById('sidebarResizer');
-
+    const resizeHandle = document.getElementById('resizeHandle');
     let isPinned = false;
     let isResizing = false;
-    let savedWidthPercent = parseFloat(localStorage.getItem('xenon_sidebar_pct')) || 15;
 
-    function clampSidebarPercent(pct) {
-      return Math.min(20, Math.max(10, pct));
+    function applySidebarWidth(px) {
+      document.documentElement.style.setProperty('--sb-width', px + 'px');
     }
 
-    function applySidebarWidth(pct) {
-      const clamped = clampSidebarPercent(pct);
-      const pxWidth = Math.round((window.innerWidth * clamped) / 100);
-      document.documentElement.style.setProperty('--sidebar-width', pxWidth + 'px');
-      return clamped;
+    function getClampedWidth(rawPx) {
+      const vw = window.innerWidth;
+      const minW = Math.max(130, vw * 0.10);
+      const maxW = Math.max(minW + 40, vw * 0.20);
+      return Math.min(Math.max(rawPx, minW), maxW);
     }
 
-    savedWidthPercent = applySidebarWidth(savedWidthPercent);
+    const savedWidthPct = parseFloat(localStorage.getItem('xenon_sb_pct'));
+    if (!isNaN(savedWidthPct)) {
+      applySidebarWidth(getClampedWidth(window.innerWidth * savedWidthPct));
+    } else {
+      applySidebarWidth(getClampedWidth(window.innerWidth * 0.15));
+    }
 
     window.addEventListener('resize', () => {
-      applySidebarWidth(savedWidthPercent);
+      const currentPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sb-width'));
+      if (!isNaN(currentPx)) {
+        applySidebarWidth(getClampedWidth(currentPx));
+      }
     });
 
     function openSidebar() {
-      applySidebarWidth(savedWidthPercent);
       sidebar.classList.add('open');
     }
 
@@ -840,11 +830,9 @@
 
     function unpinAndCloseSidebar() {
       isPinned = false;
-      isResizing = false;
-      document.body.classList.remove('is-resizing');
-      document.body.classList.remove('sidebar-pinned');
-      trigger.classList.remove('pinned');
       sidebar.classList.remove('open');
+      trigger.classList.remove('pinned');
+      document.body.classList.remove('sidebar-pinned');
     }
 
     trigger.addEventListener('mouseenter', openSidebar);
@@ -854,7 +842,8 @@
     trigger.addEventListener('click', () => {
       isPinned = !isPinned;
       if (isPinned) {
-        applySidebarWidth(savedWidthPercent);
+        const currentPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sb-width'));
+        applySidebarWidth(getClampedWidth(currentPx));
         sidebar.classList.add('open');
         trigger.classList.add('pinned');
         document.body.classList.add('sidebar-pinned');
@@ -863,55 +852,53 @@
       }
     });
 
-    // Перетягивание правого края зафиксированной панели
-    resizer.addEventListener('mousedown', (e) => {
+    resizeHandle.addEventListener('mousedown', (e) => {
       if (!isPinned) return;
       e.preventDefault();
       isResizing = true;
-      document.body.classList.add('is-resizing');
+      document.body.classList.add('resizing');
     });
 
     document.addEventListener('mousemove', (e) => {
       if (!isResizing) return;
+      const vw = window.innerWidth;
+      const minW = vw * 0.10;
+      const maxW = vw * 0.20;
+      const closeThreshold = minW * 0.50; // 50% от минимальной ширины (5% ширины окна)
 
-      const currentPercent = (e.clientX / window.innerWidth) * 100;
-
-      // Порог закрытия: 50% от минимальной ширины (10% * 0.5 = 5% ширины окна)
-      if (currentPercent <= 5) {
+      if (e.clientX < closeThreshold) {
+        isResizing = false;
+        document.body.classList.remove('resizing');
         unpinAndCloseSidebar();
+        applySidebarWidth(minW);
         return;
       }
 
-      savedWidthPercent = applySidebarWidth(currentPercent);
-      localStorage.setItem('xenon_sidebar_pct', savedWidthPercent.toFixed(2));
+      const clamped = Math.min(Math.max(e.clientX, minW), maxW);
+      applySidebarWidth(clamped);
+      localStorage.setItem('xenon_sb_pct', (clamped / vw).toFixed(4));
     });
 
     document.addEventListener('mouseup', () => {
       if (isResizing) {
         isResizing = false;
-        document.body.classList.remove('is-resizing');
+        document.body.classList.remove('resizing');
       }
     });
 
-    // Управление видимостью кнопки "^"
+    // 5. Управление видимостью кнопки "^" и прикреплением файлов
     const promptInput = document.getElementById('promptInput');
     const sendBtn = document.getElementById('sendBtn');
+    const attachBtn = document.getElementById('attachBtn');
+    const fileInput = document.getElementById('fileInput');
+    const attachedFilesBox = document.getElementById('attachedFiles');
     let selectedFiles = [];
 
     function updateSendButtonVisibility() {
       const hasText = promptInput.value.length > 0;
       const hasFiles = selectedFiles.length > 0;
-      if (hasText || hasFiles) {
-        sendBtn.classList.add('visible');
-      } else {
-        sendBtn.classList.remove('visible');
-      }
+      sendBtn.classList.toggle('visible', hasText || hasFiles);
     }
-
-    // Прикрепление файлов
-    const attachBtn = document.getElementById('attachBtn');
-    const fileInput = document.getElementById('fileInput');
-    const attachedFilesBox = document.getElementById('attachedFiles');
 
     attachBtn.addEventListener('click', () => fileInput.click());
 
@@ -925,11 +912,7 @@
 
     function renderFiles() {
       attachedFilesBox.innerHTML = '';
-      if (selectedFiles.length === 0) {
-        attachedFilesBox.classList.remove('has-files');
-        return;
-      }
-      attachedFilesBox.classList.add('has-files');
+      attachedFilesBox.classList.toggle('has-files', selectedFiles.length > 0);
       selectedFiles.forEach((file, index) => {
         const chip = document.createElement('div');
         chip.className = 'file-chip';
@@ -946,38 +929,38 @@
       });
     }
 
-    // Плавная посимвольная печать ответа Ксенона
+    // 6. Авто-высота поля, отправка и посимвольная печать ответа
     const mainContainer = document.getElementById('mainContainer');
     const messagesArea = document.getElementById('messagesArea');
     const greetingBox = document.getElementById('greetingBox');
     const newChatBtn = document.getElementById('newChatBtn');
-    let activeTypingTimers = [];
-
-    function typeMessageSmoothly(container, fullText) {
-      let index = 0;
-      const chars = Array.from(fullText);
-
-      const timer = setInterval(() => {
-        if (index >= chars.length) {
-          clearInterval(timer);
-          return;
-        }
-        const span = document.createElement('span');
-        span.className = 'typed-char';
-        span.textContent = chars[index];
-        container.appendChild(span);
-        index++;
-        messagesArea.scrollTop = messagesArea.scrollHeight;
-      }, 16);
-
-      activeTypingTimers.push(timer);
-    }
+    let activeTypingTimer = null;
 
     promptInput.addEventListener('input', function () {
       this.style.height = 'auto';
       this.style.height = this.scrollHeight + 'px';
       updateSendButtonVisibility();
     });
+
+    function typeTextSmoothly(element, fullText) {
+      if (activeTypingTimer) {
+        clearInterval(activeTypingTimer);
+      }
+      let index = 0;
+      activeTypingTimer = setInterval(() => {
+        if (index < fullText.length) {
+          const span = document.createElement('span');
+          span.className = 'char-fade';
+          span.textContent = fullText[index];
+          element.appendChild(span);
+          index++;
+          messagesArea.scrollTop = messagesArea.scrollHeight;
+        } else {
+          clearInterval(activeTypingTimer);
+          activeTypingTimer = null;
+        }
+      }, 16);
+    }
 
     function handleSend() {
       const text = promptInput.value;
@@ -999,11 +982,9 @@
       const aiMsg = document.createElement('div');
       aiMsg.className = 'msg ai';
       messagesArea.appendChild(aiMsg);
-
       messagesArea.scrollTop = messagesArea.scrollHeight;
 
-      const replyText = 'Интерфейс готов к работе. Подключите API-ключ для запуска агентов.';
-      typeMessageSmoothly(aiMsg, replyText);
+      typeTextSmoothly(aiMsg, 'Интерфейс готов к работе. Подключите API-ключ для запуска агентов.');
 
       promptInput.value = '';
       promptInput.style.height = 'auto';
@@ -1022,8 +1003,10 @@
     });
 
     newChatBtn.addEventListener('click', () => {
-      activeTypingTimers.forEach(t => clearInterval(t));
-      activeTypingTimers = [];
+      if (activeTypingTimer) {
+        clearInterval(activeTypingTimer);
+        activeTypingTimer = null;
+      }
       messagesArea.innerHTML = '';
       messagesArea.classList.remove('active');
       mainContainer.classList.remove('chat-started');
