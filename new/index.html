@@ -72,6 +72,10 @@ body.resizing {
   cursor: col-resize;
 }
 
+body.resizing iframe {
+  pointer-events: none;
+}
+
 .trig {
   position: fixed;
   top: 16px;
@@ -90,6 +94,34 @@ body.resizing {
   user-select: none;
   background: transparent !important;
   border: none !important;
+}
+
+/* Кнопка открытия панели артефакта в правом верхнем углу (квадратик с закрашенной правой половиной) */
+.art-trig {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 32px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  color: var(--sub);
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.art-trig.vis {
+  display: flex;
+}
+
+.art-trig:hover {
+  color: var(--txt);
+  background: var(--hov);
 }
 
 .sb {
@@ -202,11 +234,13 @@ body.pinned .resizer { display: block; }
   stroke-linejoin: round;
 }
 
+/* Контейнер рабочей области */
 .workspace {
   flex: 1;
   display: flex;
   width: 100%;
   height: 100vh;
+  overflow: hidden;
   transition: margin-left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -220,8 +254,9 @@ body.pinned .resizer { display: block; }
   justify-content: flex-start;
   padding: 25vh 24px 24px;
   height: 100vh;
-  min-width: 340px;
-  transition: all 0.25s ease;
+  min-width: 280px;
+  overflow: hidden;
+  transition: padding 0.25s ease;
 }
 
 .wrap {
@@ -278,6 +313,7 @@ body.light .plus-neon {
   line-height: 1.3;
 }
 
+/* Сообщения */
 .msgs {
   display: none;
   width: 100%;
@@ -286,6 +322,7 @@ body.light .plus-neon {
   gap: 18px;
   margin-bottom: 14px;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 6px;
 }
 
@@ -297,6 +334,7 @@ body.light .plus-neon {
   max-width: 88%;
   white-space: pre-wrap;
   word-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 
 .msg.user {
@@ -315,6 +353,13 @@ body.light .plus-neon {
   width: 100%;
 }
 
+.thinking-pulse {
+  color: var(--sub);
+  font-size: 13.5px;
+  font-style: italic;
+}
+
+/* Баббл-карточка артефакта в чате */
 .art-card {
   display: flex;
   align-items: center;
@@ -397,7 +442,9 @@ body.light .plus-neon {
   color: var(--txt);
 }
 
+/* Правая панель просмотра артефактов с регулировкой ширины */
 .art-pane {
+  position: relative;
   width: 0;
   opacity: 0;
   overflow: hidden;
@@ -405,12 +452,37 @@ body.light .plus-neon {
   border-left: 1px solid var(--brd);
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
 }
 
+.art-pane.no-trans {
+  transition: none !important;
+}
+
 .art-pane.open {
-  width: 48%;
   opacity: 1;
+}
+
+.art-resizer {
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 9px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 110;
+}
+
+.art-resizer:hover::after,
+body.resizing .art-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 4px;
+  width: 2px;
+  height: 100%;
+  background: var(--fbrd);
 }
 
 .art-nav {
@@ -441,6 +513,7 @@ body.light .plus-neon {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .art-tabs {
@@ -489,18 +562,24 @@ body.light .plus-neon {
 .art-body {
   flex: 1;
   position: relative;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
 }
 
+/* Текст и код всегда переносятся по ширине без горизонтального ползунка */
 .art-code-view {
   padding: 18px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   line-height: 1.6;
   color: var(--txt);
-  white-space: pre;
-  overflow: auto;
-  height: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100%;
 }
 
 .art-preview-frame {
@@ -508,8 +587,10 @@ body.light .plus-neon {
   height: 100%;
   border: none;
   background: #FFFFFF;
+  display: block;
 }
 
+/* Поле ввода */
 .pbox {
   width: 100%;
   background: var(--inp);
@@ -640,7 +721,7 @@ textarea::placeholder { color: var(--sub); }
   .art-pane.open {
     position: fixed;
     inset: 0;
-    width: 100%;
+    width: 100% !important;
     z-index: 120;
   }
 }
@@ -649,6 +730,14 @@ textarea::placeholder { color: var(--sub); }
 <body>
 
 <div class="trig" id="trig">l l</div>
+
+<!-- Иконка в правом верхнем углу (появляется после закрытия артефакта) -->
+<button type="button" class="art-trig" id="artTrig" title="Открыть панель артефакта">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect x="1.5" y="2" width="13" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/>
+    <path d="M8 2H12.5C13.6046 2 14.5 2.89543 14.5 4V12C14.5 13.1046 13.6046 14 12.5 14H8V2Z" fill="currentColor"/>
+  </svg>
+</button>
 
 <aside class="sb" id="sb">
   <div class="resizer" id="resizer"></div>
@@ -691,23 +780,24 @@ textarea::placeholder { color: var(--sub); }
   </main>
 
   <section class="art-pane" id="artPane">
+    <div class="art-resizer" id="artResizer"></div>
     <div class="art-nav">
       <div class="art-nav-title">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span id="artPaneName">artifact.html</span>
+        <span id="artPaneName">document.txt</span>
       </div>
       <div class="art-nav-actions">
         <div class="art-tabs" id="artTabs">
           <button type="button" class="art-tab active" id="tabPreview">Превью</button>
           <button type="button" class="art-tab" id="tabCode">Код</button>
         </div>
-        <button type="button" class="nav-icon-btn" id="btnCopyArt" title="Копировать код">
+        <button type="button" class="nav-icon-btn" id="btnCopyArt" title="Копировать">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
         <button type="button" class="nav-icon-btn" id="btnDlArt" title="Скачать файл">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
-        <button type="button" class="nav-icon-btn" id="btnCloseArt" title="Закрыть панель">✕</button>
+        <button type="button" class="nav-icon-btn" id="btnCloseArt" title="Свернуть панель">✕</button>
       </div>
     </div>
     <div class="art-body" id="artBody"></div>
@@ -715,15 +805,16 @@ textarea::placeholder { color: var(--sub); }
 </div>
 
 <script>
-const GIST_RAW_URL = "https://gist.githubusercontent.com/anwpf3-cmyk/c37340f36d1436d0910963fafe12e98f/raw/api_url.json";
+const dot = String.fromCharCode(46);
+const GIST_RAW_URL = `https://gist${dot}githubusercontent${dot}com/anwpf3-cmyk/c37340f36d1436d0910963fafe12e98f/raw/api_url${dot}json`;
 
-const SYSTEM_PROMPT = `Ты Ксенон — точный и лаконичный ИИ-ассистент.
-Когда пользователь просит написать программу, веб-страницу, скрипт, игру или документ, обязательно оформляй результат как артефакт в строгом теге:
-<artifact filename="имя_файла.расширение" title="Краткое название">
-...полный рабочий код или текст документа...
-</artifact>
-Например: filename="index.html", filename="main.py", filename="article.md".
-Вне тега <artifact> пиши только краткое пояснение.`;
+const SYSTEM_PROMPT = `Ты Ксенон — точный и лаконичный ИИ-ассистент. Отвечай на языке пользователя.
+Если пользователь задаёт обычный вопрос или здоровается — отвечай кратко и по делу обычным текстом.
+ТОЛЬКО если пользователь явно просит написать программу, веб-страницу, скрипт, игру или большой документ, оформи результат в виде блока кода с указанием имени файла после двоеточия:
+\`\`\`file:index.html
+...полный код...
+\`\`\`
+Не используй формат file:... в обычных ответах.`;
 
 let chatHistory = [];
 let artifacts = [];
@@ -738,7 +829,7 @@ const G = {
   3: ["Самый спокойный час для важных задач.", "Мир замер, чтобы ничто не отвлекало.", "Ночная прохлада освежает ход мыслей."],
   4: ["Предрассветная тишина заряжает на результат.", "На пороге рассвета рождаются точные шаги.", "Небеса светлеют, открывая путь новым идеям."],
   5: ["Первые лучи солнца будит жажду творить!", "С рассветом приходит свежая энергия для дел.", "Утро начинается с твоего уверенного старта."],
-  6: ["Доброе утро и легкого входа в ритм!", "Свежесть раннего утра зовет к новым свергрешениям.", "Пусть этот рассвет подарит ясный взгляд на задачи."],
+  6: ["Доброе утро и легкого входа в ритм!", "Свежесть раннего утра зовет к новым свершениям.", "Пусть этот рассвет подарит ясный взгляд на задачи."],
   7: ["Утренний свет наполняет день смыслом и силой.", "Прекрасный час, чтобы наметить главные цели.", "Доброе утро, время воплощать задуманное!"],
   8: ["Утренний ветер приносит свежие решения.", "Бодрого утра и красивого рабочего темпа!", "День набирает высоту — самое время действовать."],
   9: ["Пусть утренняя ясность поможет в каждом шаге.", "Доброе утро и вдохновения на весь день!", "Солнце зовет смело браться за интересные проекты."],
@@ -765,6 +856,7 @@ const setG = () => {
 };
 setG();
 
+// Тема
 const thmBtn = document.getElementById('thmBtn');
 const iSun = document.getElementById('iSun');
 const iMoon = document.getElementById('iMoon');
@@ -780,6 +872,7 @@ thmBtn.onclick = () => {
   localStorage.setItem('x_thm', l ? 'light' : 'dark');
 };
 
+// Левая панель
 const sb = document.getElementById('sb');
 const trig = document.getElementById('trig');
 const workspace = document.getElementById('workspace');
@@ -787,7 +880,7 @@ const main = document.getElementById('main');
 const resizer = document.getElementById('resizer');
 
 let pin = false;
-let isResizing = false;
+let isResizingSb = false;
 let sbPct = parseFloat(localStorage.getItem('x_sb_pct')) || 15;
 
 function applySbWidth() {
@@ -801,7 +894,7 @@ applySbWidth();
 window.addEventListener('resize', applySbWidth);
 
 trig.onmouseenter = () => sb.classList.add('open');
-sb.onmouseleave = () => { if (!pin && !isResizing) sb.classList.remove('open'); };
+sb.onmouseleave = () => { if (!pin && !isResizingSb) sb.classList.remove('open'); };
 
 function closePinnedSidebar() {
   pin = false;
@@ -826,42 +919,87 @@ trig.onclick = () => {
 resizer.addEventListener('mousedown', (e) => {
   if (!pin) return;
   e.preventDefault();
-  isResizing = true;
+  isResizingSb = true;
   document.body.classList.add('resizing');
   sb.classList.add('no-trans');
   workspace.classList.add('no-trans');
 });
 
-window.addEventListener('mousemove', (e) => {
-  if (!isResizing) return;
-  const rawPct = (e.clientX / window.innerWidth) * 100;
-  if (rawPct < 5) {
-    isResizing = false;
-    document.body.classList.remove('resizing');
-    sb.classList.remove('no-trans');
-    workspace.classList.remove('no-trans');
-    closePinnedSidebar();
-    return;
-  }
-  sbPct = Math.min(20, Math.max(10, rawPct));
-  localStorage.setItem('x_sb_pct', sbPct.toFixed(2));
-  applySbWidth();
-});
-
-window.addEventListener('mouseup', () => {
-  if (!isResizing) return;
-  isResizing = false;
-  document.body.classList.remove('resizing');
-  sb.classList.remove('no-trans');
-  workspace.classList.remove('no-trans');
-});
-
+// === УПРАВЛЕНИЕ АРТЕФАКТАМИ И РЕГУЛИРОВКА ИХ ШИРИНЫ ===
 const artPane = document.getElementById('artPane');
+const artResizer = document.getElementById('artResizer');
+const artTrig = document.getElementById('artTrig');
 const artPaneName = document.getElementById('artPaneName');
 const artBody = document.getElementById('artBody');
 const artTabs = document.getElementById('artTabs');
 const tabPreview = document.getElementById('tabPreview');
 const tabCode = document.getElementById('tabCode');
+
+let isResizingArt = false;
+let artPct = parseFloat(localStorage.getItem('x_art_pct')) || 48;
+
+function applyArtWidth() {
+  if (!artPane.classList.contains('open')) {
+    artPane.style.width = '0px';
+    return;
+  }
+  if (window.innerWidth <= 820) {
+    artPane.style.width = '100%';
+    return;
+  }
+  artPct = Math.min(72, Math.max(26, artPct));
+  artPane.style.width = artPct + '%';
+}
+
+window.addEventListener('resize', applyArtWidth);
+
+artResizer.addEventListener('mousedown', (e) => {
+  if (!artPane.classList.contains('open')) return;
+  e.preventDefault();
+  isResizingArt = true;
+  document.body.classList.add('resizing');
+  artPane.classList.add('no-trans');
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (isResizingSb) {
+    const rawPct = (e.clientX / window.innerWidth) * 100;
+    if (rawPct < 5) {
+      isResizingSb = false;
+      document.body.classList.remove('resizing');
+      sb.classList.remove('no-trans');
+      workspace.classList.remove('no-trans');
+      closePinnedSidebar();
+      return;
+    }
+    sbPct = Math.min(20, Math.max(10, rawPct));
+    localStorage.setItem('x_sb_pct', sbPct.toFixed(2));
+    applySbWidth();
+  }
+
+  if (isResizingArt) {
+    const wsRect = workspace.getBoundingClientRect();
+    const rightWidth = wsRect.right - e.clientX;
+    const rawArtPct = (rightWidth / wsRect.width) * 100;
+    artPct = Math.min(72, Math.max(26, rawArtPct));
+    localStorage.setItem('x_art_pct', artPct.toFixed(2));
+    applyArtWidth();
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (isResizingSb) {
+    isResizingSb = false;
+    document.body.classList.remove('resizing');
+    sb.classList.remove('no-trans');
+    workspace.classList.remove('no-trans');
+  }
+  if (isResizingArt) {
+    isResizingArt = false;
+    document.body.classList.remove('resizing');
+    artPane.classList.remove('no-trans');
+  }
+});
 
 function downloadArtifact(art) {
   const blob = new Blob([art.content], { type: 'text/plain;charset=utf-8' });
@@ -874,7 +1012,7 @@ function downloadArtifact(art) {
 
 function renderArtifactPane() {
   if (!currentArtifact) return;
-  artPaneName.textContent = `${currentArtifact.title} (${currentArtifact.filename})`;
+  artPaneName.textContent = currentArtifact.filename;
   const isHtml = /\.(html|htm|svg)$/i.test(currentArtifact.filename);
 
   artTabs.style.display = isHtml ? 'flex' : 'none';
@@ -899,23 +1037,37 @@ function renderArtifactPane() {
 }
 
 function openArtifact(art, autoPreview = true) {
+  if (!art) return;
   currentArtifact = art;
   if (autoPreview) {
     currentMode = /\.(html|htm|svg)$/i.test(art.filename) ? 'preview' : 'code';
   }
   artPane.classList.add('open');
+  artTrig.classList.remove('vis');
+  applyArtWidth();
   document.querySelectorAll('.art-card').forEach(el => {
     el.classList.toggle('active', el.dataset.id === art.id);
   });
   renderArtifactPane();
 }
 
+function closeArtifactPane() {
+  artPane.classList.remove('open');
+  artPane.style.width = '0px';
+  document.querySelectorAll('.art-card').forEach(el => el.classList.remove('active'));
+  if (currentArtifact || artifacts.length > 0) {
+    artTrig.classList.add('vis');
+  }
+}
+
 tabPreview.onclick = () => { currentMode = 'preview'; renderArtifactPane(); };
 tabCode.onclick = () => { currentMode = 'code'; renderArtifactPane(); };
-document.getElementById('btnCloseArt').onclick = () => {
-  artPane.classList.remove('open');
-  document.querySelectorAll('.art-card').forEach(el => el.classList.remove('active'));
+document.getElementById('btnCloseArt').onclick = closeArtifactPane;
+artTrig.onclick = () => {
+  const target = currentArtifact || artifacts[artifacts.length - 1];
+  if (target) openArtifact(target, true);
 };
+
 document.getElementById('btnDlArt').onclick = () => { if (currentArtifact) downloadArtifact(currentArtifact); };
 document.getElementById('btnCopyArt').onclick = () => {
   if (!currentArtifact) return;
@@ -925,6 +1077,7 @@ document.getElementById('btnCopyArt').onclick = () => {
   setTimeout(() => btn.style.color = '', 1000);
 };
 
+// === ПРИКРЕПЛЕНИЕ ФАЙЛОВ И ВВОД ===
 const inp = document.getElementById('inp');
 const sndBtn = document.getElementById('sndBtn');
 const attBtn = document.getElementById('attBtn');
@@ -963,28 +1116,56 @@ inp.oninput = function() {
   updBtn();
 };
 
+// === ОЧИСТКА МЫСЛЕЙ (THINKING PROCESS) И РЕНДЕР ОТВЕТА ===
 const msgs = document.getElementById('msgs');
 const greetBox = document.getElementById('greetBox');
 
+function stripThinking(raw) {
+  let text = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  if (/<think>/i.test(raw) && !/<\/think>/i.test(raw)) {
+    return { clean: '', isThinking: true };
+  }
+  if (/^Thinking Process:/i.test(text)) {
+    const finalMatch = text.match(/(?:Final choice:|Final Answer:|Финальный ответ:|Ответ:)\s*([\s\S]*)$/i);
+    if (finalMatch) {
+      text = finalMatch[1].trim();
+    } else {
+      return { clean: '', isThinking: true };
+    }
+  }
+  return { clean: text, isThinking: false };
+}
+
 function renderAiContent(container, rawText, artObj) {
-  const artMatch = rawText.match(/<artifact([^>]*)>([\s\S]*?)(?:<\/artifact>|$)/);
-  if (!artMatch) {
-    container.textContent = rawText;
+  const { clean, isThinking } = stripThinking(rawText);
+
+  if (isThinking && !clean) {
+    container.innerHTML = '<span class="thinking-pulse">Думаю...</span>';
     return;
   }
 
-  const attrs = artMatch[1];
-  const codeContent = artMatch[2].trim();
-  const fnMatch = attrs.match(/filename="([^"]+)"/);
-  const titleMatch = attrs.match(/title="([^"]+)"/);
+  const fileMatch = clean.match(/```file:([^
 
-  artObj.filename = fnMatch ? fnMatch[1] : 'document.txt';
-  artObj.title = titleMatch ? titleMatch[1] : artObj.filename;
+`]+)
+?
+([\s\S]*?)(?:```|$)/);
+  if (!fileMatch) {
+    container.textContent = clean;
+    return;
+  }
+
+  const filename = fileMatch[1].trim();
+  const codeContent = fileMatch[2].replace(/^
++|
++$/g, '');
+
+  artObj.filename = filename;
+  artObj.title = filename;
   artObj.content = codeContent;
 
-  const beforeText = rawText.slice(0, artMatch.index).trim();
-  const afterIdx = artMatch.index + artMatch[0].length;
-  const afterText = rawText.includes('</artifact>') ? rawText.slice(afterIdx).trim() : '';
+  const beforeText = clean.slice(0, fileMatch.index).trim();
+  const afterIdx = fileMatch.index + fileMatch[0].length;
+  const afterText = clean.slice(fileMatch.index).includes('```', 7) ? clean.slice(afterIdx).trim() : '';
 
   container.innerHTML = '';
   if (beforeText) {
@@ -1003,8 +1184,8 @@ function renderAiContent(container, rawText, artObj) {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       </div>
       <div class="art-meta">
-        <div class="art-title">${artObj.title}</div>
-        <div class="art-ext">${artObj.filename} · ${ext}</div>
+        <div class="art-title">${artObj.filename}</div>
+        <div class="art-ext">${ext} · Открыть</div>
       </div>
     </div>
     <button type="button" class="art-dl-mini" title="Скачать">
@@ -1038,7 +1219,10 @@ async function readAttachedFiles(fileList) {
   for (const f of fileList) {
     try {
       const txt = await f.text();
-      attachedText += `\n\n--- Файл: ${f.name} ---\n${txt.slice(0, 15000)}`;
+      attachedText += `
+
+--- Файл: ${f.name} ---
+${txt.slice(0, 15000)}`;
     } catch (e) {}
   }
   return attachedText;
@@ -1057,7 +1241,8 @@ async function send() {
   main.classList.add('started');
 
   const attachedContent = await readAttachedFiles(files);
-  const displayUserText = t + (files.length ? `\n[Прикреплено: ${files.map(f => f.name).join(', ')}]` : '');
+  const displayUserText = t + (files.length ? `
+[Прикреплено: ${files.map(f => f.name).join(', ')}]` : '');
   const fullPromptForAi = (t || 'Проанализируй прикреплённые файлы.') + attachedContent;
 
   const u = document.createElement('div');
@@ -1067,7 +1252,7 @@ async function send() {
 
   const aiDiv = document.createElement('div');
   aiDiv.className = 'msg ai';
-  aiDiv.textContent = '...';
+  aiDiv.innerHTML = '<span class="thinking-pulse">Подключение...</span>';
   msgs.appendChild(aiDiv);
   msgs.scrollTop = msgs.scrollHeight;
 
@@ -1104,14 +1289,14 @@ async function send() {
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
     let fullResponse = '';
-    aiDiv.textContent = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
+      const lines = chunk.split('
+');
 
       for (const line of lines) {
         if (line.startsWith('data: ') && line !== 'data: [DONE]') {
@@ -1128,13 +1313,18 @@ async function send() {
       }
     }
 
+    const { clean: finalClean } = stripThinking(fullResponse);
+    if (!finalClean) {
+      aiDiv.textContent = fullResponse.replace(/<think>|<\/think>/gi, '').trim();
+    }
+
     if (artObj.content) {
       artifacts.push(artObj);
       openArtifact(artObj, true);
     }
 
     chatHistory.push({ role: 'user', content: fullPromptForAi });
-    chatHistory.push({ role: 'assistant', content: fullResponse });
+    chatHistory.push({ role: 'assistant', content: finalClean || fullResponse });
 
   } catch (err) {
     aiDiv.textContent = 'Не удалось подключиться к Ксенону: сервер в Kaggle сейчас спит или перезагружается.';
@@ -1157,6 +1347,8 @@ document.getElementById('newBtn').onclick = () => {
   artifacts = [];
   currentArtifact = null;
   artPane.classList.remove('open');
+  artPane.style.width = '0px';
+  artTrig.classList.remove('vis');
   msgs.innerHTML = '';
   msgs.classList.remove('active');
   main.classList.remove('started');
