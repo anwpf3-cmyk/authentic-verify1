@@ -1,1008 +1,796 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Новый чат</title>
-  <link id="dynamicFavicon" rel="icon" type="image/png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      /* Уникальная глубокая тёплая тёмная тема */
-      --bg-main: #151412;
-      --bg-sidebar: #100F0E;
-      --bg-input: #1E1C1A;
-      --bg-hover: #272421;
-      --bg-msg-user: #24221F;
-      --border-subtle: #2B2824;
-      --border-focus: #423D37;
-      --text-primary: #ECE9E2;
-      --text-secondary: #8F8A81;
-      --send-btn-bg: #F5F3EE;
-      --send-btn-color: #141312;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Новый чат</title>
+<link id="fav1" rel="shortcut icon" type="image/png">
+<link id="fav2" rel="icon" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+<script>
+(function(){
+  var c = document.createElement('canvas');
+  c.width = 16; c.height = 16;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#E8EAED';
+  ctx.fillRect(7, 3, 2, 10);
+  ctx.fillRect(3, 7, 10, 2);
+  var url = c.toDataURL('image/png');
+  document.getElementById('fav1').href = url;
+  document.getElementById('fav2').href = url;
+})();
+</script>
+<style>
+:root {
+  /* Тёмная тема: глубокий тёплый нуар (мокрый базальт и обсидиан) */
+  --bg: #121110;
+  --sb: #0D0C0B;
+  --inp: #1A1917;
+  --hov: #242220;
+  --umsg: #22201E;
+  --brd: #292724;
+  --fbrd: #3E3B36;
+  --txt: #F0EDE6;
+  --sub: #8A867E;
+  --sbg: #F0EDE6;
+  --scol: #121110;
+}
 
-    /* Более глубокая тёплая светло-серая тема */
-    body.light-theme {
-      --bg-main: #C7C3BC;
-      --bg-sidebar: #BCB8B0;
-      --bg-input: #D4D0C9;
-      --bg-hover: #B1ACA4;
-      --bg-msg-user: #B8B3AB;
-      --border-subtle: #A8A39B;
-      --border-focus: #8A857E;
-      --text-primary: #1F1E1C;
-      --text-secondary: #54504A;
-      --send-btn-bg: #F5F3EE;
-      --send-btn-color: #1A1917;
-    }
+body.light {
+  /* Светлая тема: тёплый нуар (тёплый алебастр и дымчатый туман, на 50% светлее) */
+  --bg: #EAE8E4;
+  --sb: #E0DDD7;
+  --inp: #F4F3F0;
+  --hov: #D5D1C9;
+  --umsg: #DCD8D0;
+  --brd: #CFCBC2;
+  --fbrd: #B5B0A5;
+  --txt: #1A1917;
+  --sub: #6B675E;
+  --sbg: #1A1917;
+  --scol: #F4F3F0;
+}
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-    body {
-      background-color: var(--bg-main);
-      color: var(--text-primary);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      position: relative;
-      transition: background-color 0.25s ease, color 0.25s ease;
-    }
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  transition: background 0.2s ease, color 0.2s ease;
+}
 
-    /* Кнопка-символ "l l" без выделения и с уменьшенным на ~20% межсимвольным интервалом */
-    .sidebar-trigger {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      width: 34px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 100;
-      color: var(--text-secondary);
-      font-size: 18px;
-      font-weight: 300;
-      letter-spacing: -0.04em;
-      user-select: none;
-      background: transparent !important;
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-      -webkit-tap-highlight-color: transparent;
-      transition: color 0.2s ease;
-    }
+body.resizing {
+  user-select: none;
+  cursor: col-resize;
+}
 
-    .sidebar-trigger:hover,
-    .sidebar-trigger:active,
-    .sidebar-trigger:focus,
-    .sidebar-trigger.pinned {
-      background: transparent !important;
-      box-shadow: none !important;
-      color: var(--text-primary);
-    }
+/* Кликабельная область символа l l в левом верхнем углу */
+.trig {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 34px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  color: var(--sub);
+  font-size: 19px;
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  user-select: none;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
 
-    .hover-edge-zone {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 16px;
-      height: 100vh;
-      z-index: 90;
-    }
+.trig:hover,
+.trig:active,
+.trig:focus,
+.trig.pin {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: var(--sub);
+}
 
-    /* Выдвижная боковая панель без тени, только тонкая полосочка справа */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 240px;
-      height: 100vh;
-      background-color: var(--bg-sidebar);
-      border-right: 1px solid var(--border-subtle);
-      padding: 18px 14px 14px 14px;
-      display: flex;
-      flex-direction: column;
-      transform: translateX(-100%);
-      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease, border-color 0.25s ease;
-      z-index: 95;
-      box-shadow: none !important;
-    }
+/* Выдвижная боковая панель без тени, только тонкая линия справа */
+.sb {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: var(--sb);
+  border-right: 1px solid var(--brd);
+  box-shadow: none !important;
+  padding: 18px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease, border-color 0.2s ease;
+  z-index: 95;
+}
 
-    .sidebar.resizing {
-      transition: none !important;
-      user-select: none;
-    }
+.sb.no-trans {
+  transition: none !important;
+}
 
-    .sidebar.open {
-      transform: translateX(0);
-    }
+.sb.open {
+  transform: translateX(0);
+}
 
-    /* Полоса для изменения ширины зафиксированной панели */
-    .sidebar-resizer {
-      position: absolute;
-      top: 0;
-      right: -3px;
-      width: 6px;
-      height: 100%;
-      cursor: ew-resize;
-      display: none;
-      z-index: 105;
-    }
+.resizer {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 105;
+}
 
-    body.sidebar-pinned .sidebar-resizer {
-      display: block;
-    }
+body.pinned .resizer {
+  display: block;
+}
 
-    .sidebar-header {
-      display: flex;
-      align-items: center;
-      padding-left: 42px;
-      height: 28px;
-      margin-bottom: 18px;
-      overflow: hidden;
-    }
+.sb-head {
+  display: flex;
+  align-items: center;
+  padding-left: 44px;
+  height: 28px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  white-space: nowrap;
+}
 
-    .brand-title {
-      font-family: 'Lora', Georgia, serif;
-      font-size: 19px;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      color: var(--text-primary);
-      white-space: nowrap;
-    }
+.brand {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--txt);
+}
 
-    /* Кнопка "Новый чат" с прозрачной окантовкой */
-    .new-chat-btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-      padding: 9px 12px;
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      color: var(--text-primary);
-      font-size: 13.5px;
-      cursor: pointer;
-      white-space: nowrap;
-      overflow: hidden;
-      transition: background-color 0.15s ease;
-    }
+.new-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--txt);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
 
-    .new-chat-btn:hover {
-      background-color: var(--bg-hover);
-    }
+.new-btn:hover {
+  background: var(--hov);
+}
 
-    /* Нижний футер панели с миниатюрной кнопкой темы в правом нижнем углу */
-    .sidebar-footer {
-      margin-top: auto;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding-top: 12px;
-    }
+.sb-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
 
-    .theme-toggle-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 7px;
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background-color 0.15s ease, color 0.15s ease;
-    }
+.thm-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  color: var(--sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
 
-    .theme-toggle-btn:hover {
-      background-color: var(--bg-hover);
-      color: var(--text-primary);
-    }
+.thm-btn:hover {
+  background: var(--hov);
+  color: var(--txt);
+}
 
-    .theme-toggle-btn svg {
-      width: 15px;
-      height: 15px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 1.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
+.thm-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
-    /* Основная рабочая область: строка ввода приподнята как на референсе (около 32vh сверху) */
-    .main-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 31vh 24px 24px 24px;
-      transition: margin-left 0.26s cubic-bezier(0.22, 1, 0.36, 1), padding-top 0.25s ease;
-      width: 100%;
-      height: 100vh;
-    }
+/* Основная рабочая область */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 25vh 24px 24px;
+  transition: margin-left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%;
+  height: 100vh;
+}
 
-    .main-container.resizing {
-      transition: none !important;
-    }
+.main.no-trans {
+  transition: none !important;
+}
 
-    .center-wrapper {
-      width: 100%;
-      max-width: 720px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transition: all 0.25s ease;
-    }
+.wrap {
+  width: 100%;
+  max-width: 740px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-    /* Режим активного чата (когда сообщение отправлено) */
-    .main-container.chat-started {
-      justify-content: flex-end;
-      padding-top: 56px;
-      padding-bottom: 18px;
-    }
+/* Режим активного чата (строка ввода опускается вниз и компактируется) */
+.main.started {
+  justify-content: flex-end;
+  padding-top: 54px;
+  padding-bottom: 18px;
+}
 
-    .main-container.chat-started .center-wrapper {
-      height: 100%;
-      justify-content: space-between;
-    }
+.main.started .wrap {
+  height: 100%;
+  justify-content: space-between;
+}
 
-    /* Блок приветствия */
-    .greeting-box {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      margin-bottom: 24px;
-      text-align: center;
-    }
+/* Приветствие */
+.greet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 26px;
+  text-align: center;
+}
 
-    /* Неоновый белый "+" */
-    .neon-plus {
-      font-size: 28px;
-      font-weight: 400;
-      color: #FFFFFF;
-      line-height: 1;
-      user-select: none;
-      text-shadow:
-        0 0 6px rgba(255, 255, 255, 1),
-        0 0 14px rgba(255, 255, 255, 0.9),
-        0 0 26px rgba(255, 255, 255, 0.75);
-      animation: pulseGlow 3.2s infinite alternate ease-in-out;
-    }
+.plus-neon {
+  font-size: 28px;
+  color: #FFFFFF;
+  line-height: 1;
+  user-select: none;
+  text-shadow:
+    0 0 6px #FFFFFF,
+    0 0 14px rgba(255, 255, 255, 0.9),
+    0 0 26px rgba(255, 255, 255, 0.7);
+}
 
-    body.light-theme .neon-plus {
-      text-shadow:
-        0 0 4px rgba(255, 255, 255, 1),
-        0 0 12px rgba(255, 255, 255, 0.95),
-        0 0 22px rgba(160, 155, 148, 0.85);
-    }
+body.light .plus-neon {
+  text-shadow:
+    0 0 3px #FFFFFF,
+    0 0 10px #FFFFFF,
+    0 0 18px rgba(130, 125, 115, 0.75);
+}
 
-    @keyframes pulseGlow {
-      from {
-        text-shadow:
-          0 0 5px rgba(255, 255, 255, 0.9),
-          0 0 12px rgba(255, 255, 255, 0.75),
-          0 0 22px rgba(255, 255, 255, 0.5);
-      }
-      to {
-        text-shadow:
-          0 0 8px rgba(255, 255, 255, 1),
-          0 0 18px rgba(255, 255, 255, 0.95),
-          0 0 32px rgba(255, 255, 255, 0.75);
-      }
-    }
+.greet-txt {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 27px;
+  font-weight: 400;
+  color: var(--txt);
+  line-height: 1.3;
+}
 
-    .greeting-text {
-      font-family: 'Lora', Georgia, serif;
-      font-size: 27px;
-      font-weight: 400;
-      color: var(--text-primary);
-      letter-spacing: -0.01em;
-      line-height: 1.3;
-    }
+/* Сообщения */
+.msgs {
+  display: none;
+  width: 100%;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 14px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
 
-    /* Область сообщений */
-    .messages-area {
-      display: none;
-      width: 100%;
-      flex: 1;
-      flex-direction: column;
-      gap: 18px;
-      margin-bottom: 16px;
-      overflow-y: auto;
-      padding-right: 6px;
-    }
+.msgs.active {
+  display: flex;
+}
 
-    .messages-area.active {
-      display: flex;
-    }
+.msg {
+  font-size: 14.5px;
+  line-height: 1.6;
+  max-width: 85%;
+  white-space: pre-wrap;
+}
 
-    .msg {
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 14.5px;
-      line-height: 1.6;
-      max-width: 85%;
-      white-space: pre-wrap;
-    }
+.msg.user {
+  align-self: flex-end;
+  background: var(--umsg);
+  padding: 10px 15px;
+  border-radius: 12px;
+}
 
-    .msg.user {
-      align-self: flex-end;
-      background-color: var(--bg-msg-user);
-      color: var(--text-primary);
-    }
+.msg.ai {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+  color: var(--txt);
+}
 
-    /* Прозрачный баббл без рамки для ответов Ксенона */
-    .msg.ai {
-      align-self: flex-start;
-      background: transparent;
-      border: none;
-      padding: 6px 4px;
-      color: var(--text-primary);
-      max-width: 92%;
-    }
+.char-fade {
+  display: inline;
+  animation: charReveal 0.16s ease-out forwards;
+}
 
-    /* Поле ввода */
-    .prompt-container {
-      width: 100%;
-      background-color: var(--bg-input);
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 14px 14px 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: border-color 0.2s ease, background-color 0.25s ease, padding 0.2s ease;
-    }
+@keyframes charReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 
-    .prompt-container:focus-within {
-      border-color: var(--border-focus);
-    }
+/* Поле ввода */
+.pbox {
+  width: 100%;
+  background: var(--inp);
+  border: 1px solid var(--brd);
+  border-radius: 16px;
+  padding: 14px 14px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
 
-    /* Компактный вид поля ввода внизу экрана после отправки сообщения */
-    .main-container.chat-started .prompt-container {
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      padding: 8px 10px 8px 10px;
-      border-radius: 14px;
-      gap: 8px;
-    }
+.pbox:focus-within {
+  border-color: var(--fbrd);
+}
 
-    .attached-files {
-      display: none;
-      flex-wrap: wrap;
-      gap: 8px;
-      width: 100%;
-    }
+.main.started .pbox {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 14px;
+  gap: 8px;
+}
 
-    .attached-files.has-files {
-      display: flex;
-    }
+.files {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
 
-    .file-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background-color: var(--bg-hover);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 8px;
-    }
+.files.show {
+  display: flex;
+}
 
-    .file-chip button {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 14px;
-      line-height: 1;
-    }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--hov);
+  border: 1px solid var(--brd);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
 
-    .prompt-textarea {
-      width: 100%;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--text-primary);
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      line-height: 1.5;
-      resize: none;
-      min-height: 44px;
-      max-height: 200px;
-    }
+.chip button {
+  background: none;
+  border: none;
+  color: var(--sub);
+  cursor: pointer;
+  font-size: 14px;
+}
 
-    .main-container.chat-started .prompt-textarea {
-      flex: 1;
-      width: auto;
-      min-height: 24px;
-      max-height: 140px;
-      order: 2;
-      padding: 4px 2px;
-    }
+textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--txt);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: none;
+  min-height: 44px;
+  max-height: 200px;
+}
 
-    .prompt-textarea::placeholder {
-      color: var(--text-secondary);
-    }
+.main.started textarea {
+  flex: 1;
+  width: auto;
+  min-height: 24px;
+  max-height: 140px;
+  order: 2;
+  padding: 4px 2px;
+}
 
-    .prompt-bottom-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-    }
+textarea::placeholder {
+  color: var(--sub);
+}
 
-    .main-container.chat-started .prompt-bottom-bar {
-      display: contents;
-    }
+.pbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
 
-    .attach-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 22px;
-      font-weight: 300;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background-color 0.15s ease, color 0.15s ease;
-    }
+.main.started .pbar {
+  display: contents;
+}
 
-    .main-container.chat-started .attach-btn {
-      order: 1;
-    }
+.att-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--sub);
+  font-size: 22px;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
 
-    .attach-btn:hover {
-      background-color: var(--bg-hover);
-      color: var(--text-primary);
-    }
+.main.started .att-btn {
+  order: 1;
+}
 
-    /* Кнопка отправки "^" — скрыта, пока в поле нет символов */
-    .send-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background-color: var(--send-btn-bg);
-      border: none;
-      color: var(--send-btn-color);
-      font-family: 'Inter', sans-serif;
-      font-size: 18px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      padding-top: 4px;
-      flex-shrink: 0;
-      margin-left: auto;
-      opacity: 0;
-      visibility: hidden;
-      transform: scale(0.88);
-      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
-    }
+.att-btn:hover {
+  background: var(--hov);
+  color: var(--txt);
+}
 
-    .send-btn.visible {
-      opacity: 1;
-      visibility: visible;
-      transform: scale(1);
-    }
+.snd-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--sbg);
+  border: none;
+  color: var(--scol);
+  font-size: 18px;
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding-top: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
 
-    .main-container.chat-started .send-btn {
-      order: 3;
-      margin-left: 0;
-    }
+.snd-btn.vis {
+  display: flex;
+}
 
-    .send-btn:active {
-      transform: scale(0.94);
-    }
+.main.started .snd-btn {
+  order: 3;
+  margin-left: 0;
+}
 
-    @media (max-width: 640px) {
-      .greeting-text {
-        font-size: 21px;
-      }
-      .main-container {
-        padding-top: 25vh;
-        margin-left: 0 !important;
-      }
-    }
-  </style>
+@media (max-width: 640px) {
+  .greet-txt {
+    font-size: 21px;
+  }
+  .main {
+    padding-top: 18vh;
+  }
+}
+</style>
 </head>
 <body>
 
-  <div class="hover-edge-zone" id="hoverEdge"></div>
-  <div class="sidebar-trigger" id="sidebarTrigger" title="Меню">l l</div>
+<div class="trig" id="trig">l l</div>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-resizer" id="sidebarResizer"></div>
-
-    <div class="sidebar-header">
-      <span class="brand-title">Ксенон</span>
-    </div>
-
-    <button class="new-chat-btn" id="newChatBtn">
-      <span>+</span>
-      <span>Новый чат</span>
+<aside class="sb" id="sb">
+  <div class="resizer" id="resizer"></div>
+  <div class="sb-head"><span class="brand">Ксенон</span></div>
+  <button class="new-btn" id="newBtn"><span>+</span><span>Новый чат</span></button>
+  <div class="sb-foot">
+    <button class="thm-btn" id="thmBtn" title="Сменить тему">
+      <svg id="iSun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+      </svg>
+      <svg id="iMoon" viewBox="0 0 24 24" style="display:none">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+      </svg>
     </button>
+  </div>
+</aside>
 
-    <div class="sidebar-footer">
-      <button class="theme-toggle-btn" id="themeToggleBtn" title="Сменить тему">
-        <svg id="iconSun" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="4"></circle>
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-        </svg>
-        <svg id="iconMoon" viewBox="0 0 24 24" style="display: none;">
-          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-        </svg>
-      </button>
+<main class="main" id="main">
+  <div class="wrap">
+    <div class="greet" id="greetBox">
+      <span class="plus-neon">+</span>
+      <h1 class="greet-txt" id="greetTxt"></h1>
     </div>
-  </aside>
-
-  <main class="main-container" id="mainContainer">
-    <div class="center-wrapper">
-
-      <div class="greeting-box" id="greetingBox">
-        <span class="neon-plus">+</span>
-        <h1 class="greeting-text" id="greetingText"></h1>
+    <div class="msgs" id="msgs"></div>
+    <div class="pbox">
+      <div class="files" id="filesBox"></div>
+      <textarea id="inp" placeholder="Чем я могу помочь сегодня?" rows="1"></textarea>
+      <div class="pbar">
+        <input type="file" id="fInp" multiple hidden>
+        <button type="button" class="att-btn" id="attBtn">+</button>
+        <button type="button" class="snd-btn" id="sndBtn">^</button>
       </div>
-
-      <div class="messages-area" id="messagesArea"></div>
-
-      <div class="prompt-container" id="promptContainer">
-        <div class="attached-files" id="attachedFiles"></div>
-
-        <textarea
-          class="prompt-textarea"
-          id="promptInput"
-          placeholder="Чем я могу помочь сегодня?"
-          rows="1"
-        ></textarea>
-
-        <div class="prompt-bottom-bar">
-          <input type="file" id="fileInput" multiple hidden />
-          <button type="button" class="attach-btn" id="attachBtn" title="Прикрепить файлы">+</button>
-          <button type="button" class="send-btn" id="sendBtn" title="Отправить">^</button>
-        </div>
-      </div>
-
     </div>
-  </main>
+  </div>
+</main>
 
-  <script>
-    // 1. Попиксельная отрисовка точного логотипа вкладки (жирный небольшой угловатый + строго по центру)
-    (function buildExactFavicon() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 16;
-      canvas.height = 16;
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, 16, 16);
-      ctx.fillStyle = '#E8EAED';
-      // Вертикальная и горизонтальная перекладины 2x10 px строго по центру 16x16
-      ctx.fillRect(7, 3, 2, 10);
-      ctx.fillRect(3, 7, 10, 2);
-      const link = document.getElementById('dynamicFavicon');
-      if (link) {
-        link.href = canvas.toDataURL('image/png');
-      }
-    })();
+<script>
+const G = {
+  0: ["Полночь открывает чистый лист для идей.", "С новым днем и ясными мыслями!", "В звездной тишине так легко сосредоточиться."],
+  1: ["Ночной покой помогает поймать нужный ритм.", "Время глубокого фокуса и смелых решений.", "Тишина вокруг создана для твоих планов."],
+  2: ["В два часа ночи рождаются лучшие строки.", "Ночь бережет твое вдохновение для дела.", "Пусть тихий свет экрана ведет к цели."],
+  3: ["Самый спокойный час для важных задач.", "Мир замер, чтобы ничто не отвлекало.", "Ночная прохлада освежает ход мыслей."],
+  4: ["Предрассветная тишина заряжает на результат.", "На пороге рассвета рождаются точные шаги.", "Небеса светлеют, открывая путь новым идеям."],
+  5: ["Первые лучи солнца будит жажду творить!", "С рассветом приходит свежая энергия для дел.", "Утро начинается с твоего уверенного старта."],
+  6: ["Доброе утро и легкого входа в ритм!", "Свежесть раннего утра зовет к новым свершениям.", "Пусть этот рассвет подарит ясный взгляд на задачи."],
+  7: ["Утренний свет наполняет день смыслом и силой.", "Прекрасный час, чтобы наметить главные цели.", "Доброе утро, время воплощать задуманное!"],
+  8: ["Утренний ветер приносит свежие решения.", "Бодрого утра и красивого рабочего темпа!", "День набирает высоту — самое время действовать."],
+  9: ["Пусть утренняя ясность поможет в каждом шаге.", "Доброе утро и вдохновения на весь день!", "Солнце зовет смело браться за интересные проекты."],
+  10: ["Утро в расцвете — лови волну продуктивности!", "Пусть дела складываются легко и гармонично.", "Отличный час для смелых творческих шагов."],
+  11: ["Светлое настроение помогает решать любые задачи.", "Утро плавно перетекает в уверенный рабочий поток.", "Лови вдохновение и энергию этого часа!"],
+  12: ["Солнце в зените — время ярких результатов!", "Полдень дарит ясность и силы для новых высот.", "Добрый день и гармоничного рабочего настроя!"],
+  13: ["Пусть этот дневной час принесет легкие решения.", "Самое сердце дня зовет двигаться вперед.", "Теплого привета и свежего взгляда на дела!"],
+  14: ["Спокойное течение дня помогает держать фокус.", "Добрый день, полный интересных открытий!", "Пусть удача сопровождает каждую твою идею."],
+  15: ["День сияет красками твоих новых побед.", "Душевного равновесия и точности в работе!", "Светлый час для воплощения главных планов."],
+  16: ["Золотые лучи дня вдохновляют на финальный рывок.", "Пусть все задуманное обретает четкую форму.", "Уютного и продуктивного продолжения дня!"],
+  17: ["Предвечерний свет настраивает на вдумчивый труд.", "Отличный момент, чтобы красиво оформить идеи.", "Мягкий ритм конца дня помогает довести дело до идеала."],
+  18: ["Добрый вечер и вдохновения в красках заката!", "Сумерки приносят спокойствие и глубину мыслей.", "Вечер открывает время для неспешных задач."],
+  19: ["Вечерние огни зажигают искру новых замыслов.", "Добрый вечер — пора творить без суеты!", "Уютная атмосфера помогает сосредоточиться на главном."],
+  20: ["Вечерняя прохлада освежает взгляд на проекты.", "Привет под первые звезды — самое время для идей.", "Пусть этот тихий вечер подарит ясность ума."],
+  21: ["Добрый вечер, время спокойного и глубокого фокуса!", "В тихом свете луны легко рождаются решения.", "Вечерняя тишина бережет твою концентрацию."],
+  22: ["Поздний вечер располагает к вдумчивой работе.", "Теплый свет лампы помогает навести порядок в мыслях.", "Доброго вечера и вдохновения для важных строк!"],
+  23: ["На исходе суток рождаются самые точные идеи.", "Звездный час для тех, кто увлечен своим делом.", "Тихий привет в завершении дня — я готов помочь!"]
+};
 
-    // 2. Случайные приветствия по часам
-    const greetingsByHour = {
-      0: [
-        "Полночь открывает чистый лист для идей.",
-        "С новым днем и ясными мыслями!",
-        "В звездной тишине так легко сосредоточиться."
-      ],
-      1: [
-        "Ночной покой помогает поймать нужный ритм.",
-        "Время глубокого фокуса и смелых решений.",
-        "Тишина вокруг создана для твоих планов."
-      ],
-      2: [
-        "В два часа ночи рождаются лучшие строки.",
-        "Ночь бережет твое вдохновение для дела.",
-        "Пусть тихий свет экрана ведет к цели."
-      ],
-      3: [
-        "Самый спокойный час для важных задач.",
-        "Мир замер, чтобы ничто не отвлекало.",
-        "Ночная прохлада освежает ход мыслей."
-      ],
-      4: [
-        "Предрассветная тишина заряжает на результат.",
-        "На пороге рассвета рождаются точные шаги.",
-        "Небеса светлеют, открывая путь новым идеям."
-      ],
-      5: [
-        "Первые лучи солнца будит жажду творить!",
-        "С рассветом приходит свежая энергия для дел.",
-        "Утро начинается с твоего уверенного старта."
-      ],
-      6: [
-        "Доброе утро и легкого входа в ритм!",
-        "Свежесть раннего утра зовет к новым свершениям.",
-        "Пусть этот рассвет подарит ясный взгляд на задачи."
-      ],
-      7: [
-        "Утренний свет наполняет день смыслом и силой.",
-        "Прекрасный час, чтобы наметить главные цели.",
-        "Доброе утро, время воплощать задуманное!"
-      ],
-      8: [
-        "Утренний ветер приносит свежие решения.",
-        "Бодрого утра и красивого рабочего темпа!",
-        "День набирает высоту — самое время действовать."
-      ],
-      9: [
-        "Пусть утренняя ясность поможет в каждом шаге.",
-        "Доброе утро и вдохновения на весь день!",
-        "Солнце зовет смело браться за интересные проекты."
-      ],
-      10: [
-        "Утро в расцвете — лови волну продуктивности!",
-        "Пусть дела складываются легко и гармонично.",
-        "Отличный час для смелых творческих шагов."
-      ],
-      11: [
-        "Светлое настроение помогает решать любые задачи.",
-        "Утро плавно перетекает в уверенный рабочий поток.",
-        "Лови вдохновение и энергию этого часа!"
-      ],
-      12: [
-        "Солнце в зените — время ярких результатов!",
-        "Полдень дарит ясность и силы для новых высот.",
-        "Добрый день и гармоничного рабочего настроя!"
-      ],
-      13: [
-        "Пусть этот дневной час принесет легкие решения.",
-        "Самое сердце дня зовет двигаться вперед.",
-        "Теплого привета и свежего взгляда на дела!"
-      ],
-      14: [
-        "Спокойное течение дня помогает держать фокус.",
-        "Добрый день, полный интересных открытий!",
-        "Пусть удача сопровождает каждую твою идею."
-      ],
-      15: [
-        "День сияет красками твоих новых побед.",
-        "Душевного равновесия и точности в работе!",
-        "Светлый час для воплощения главных планов."
-      ],
-      16: [
-        "Золотые лучи дня вдохновляют на финальный рывок.",
-        "Пусть все задуманное обретает четкую форму.",
-        "Уютного и продуктивного продолжения дня!"
-      ],
-      17: [
-        "Предвечерний свет настраивает на вдумчивый труд.",
-        "Отличный момент, чтобы красиво оформить идеи.",
-        "Мягкий ритм конца дня помогает довести дело до идеала."
-      ],
-      18: [
-        "Добрый вечер и вдохновения в красках заката!",
-        "Сумерки приносят спокойствие и глубину мыслей.",
-        "Вечер открывает время для неспешных задач."
-      ],
-      19: [
-        "Вечерние огни зажигают искру новых замыслов.",
-        "Добрый вечер — пора творить без суеты!",
-        "Уютная атмосфера помогает сосредоточиться на главном."
-      ],
-      20: [
-        "Вечерняя прохлада освежает взгляд на проекты.",
-        "Привет под первые звезды — самое время для идей.",
-        "Пусть этот тихий вечер подарит ясность ума."
-      ],
-      21: [
-        "Добрый вечер, время спокойного и глубокого фокуса!",
-        "В тихом свете луны легко рождаются решения.",
-        "Вечерняя тишина бережет твою концентрацию."
-      ],
-      22: [
-        "Поздний вечер располагает к вдумчивой работе.",
-        "Теплый свет лампы помогает навести порядок в мыслях.",
-        "Доброго вечера и вдохновения для важных строк!"
-      ],
-      23: [
-        "На исходе суток рождаются самые точные идеи.",
-        "Звездный час для тех, кто увлечен своим делом.",
-        "Тихий привет в завершении дня — я готов помочь!"
-      ]
+const setG = () => {
+  const h = new Date().getHours();
+  const a = G[h] || G[12];
+  document.getElementById('greetTxt').textContent = a[Math.floor(Math.random() * a.length)];
+};
+setG();
+
+// Переключатель темы
+const thmBtn = document.getElementById('thmBtn');
+const iSun = document.getElementById('iSun');
+const iMoon = document.getElementById('iMoon');
+const setThm = l => {
+  document.body.classList.toggle('light', l);
+  iSun.style.display = l ? 'none' : 'block';
+  iMoon.style.display = l ? 'block' : 'none';
+};
+if (localStorage.getItem('x_thm') === 'light') setThm(true);
+thmBtn.onclick = () => {
+  const l = !document.body.classList.contains('light');
+  setThm(l);
+  localStorage.setItem('x_thm', l ? 'light' : 'dark');
+};
+
+// Логика левой панели (выдвижение ТОЛЬКО при наведении на символ "l l", фиксация по клику, ресайз 10%-20%)
+const sb = document.getElementById('sb');
+const trig = document.getElementById('trig');
+const main = document.getElementById('main');
+const resizer = document.getElementById('resizer');
+
+let pin = false;
+let isResizing = false;
+let sbPct = parseFloat(localStorage.getItem('x_sb_pct')) || 15;
+
+function applySbWidth() {
+  sbPct = Math.min(20, Math.max(10, sbPct));
+  const px = Math.round(window.innerWidth * (sbPct / 100));
+  sb.style.width = px + 'px';
+  main.style.marginLeft = (pin && window.innerWidth > 640) ? (px + 'px') : '0px';
+}
+
+applySbWidth();
+window.addEventListener('resize', applySbWidth);
+
+// Выдвигается только при наведении на кликабельную область "l l"
+trig.onmouseenter = () => {
+  sb.classList.add('open');
+};
+
+sb.onmouseleave = () => {
+  if (!pin && !isResizing) {
+    sb.classList.remove('open');
+  }
+};
+
+function closePinnedSidebar() {
+  pin = false;
+  sb.classList.remove('open');
+  trig.classList.remove('pin');
+  document.body.classList.remove('pinned');
+  main.style.marginLeft = '0px';
+}
+
+trig.onclick = () => {
+  if (pin) {
+    closePinnedSidebar();
+  } else {
+    pin = true;
+    sb.classList.add('open');
+    trig.classList.add('pin');
+    document.body.classList.add('pinned');
+    applySbWidth();
+  }
+};
+
+// Регулировка ширины (от 10% до 20%) и закрытие при протаскивании левее 50% от мин. ширины (5%)
+resizer.addEventListener('mousedown', (e) => {
+  if (!pin) return;
+  e.preventDefault();
+  isResizing = true;
+  document.body.classList.add('resizing');
+  sb.classList.add('no-trans');
+  main.classList.add('no-trans');
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const rawPct = (e.clientX / window.innerWidth) * 100;
+
+  if (rawPct < 5) {
+    isResizing = false;
+    document.body.classList.remove('resizing');
+    sb.classList.remove('no-trans');
+    main.classList.remove('no-trans');
+    closePinnedSidebar();
+    return;
+  }
+
+  sbPct = Math.min(20, Math.max(10, rawPct));
+  localStorage.setItem('x_sb_pct', sbPct.toFixed(2));
+  applySbWidth();
+});
+
+window.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  isResizing = false;
+  document.body.classList.remove('resizing');
+  sb.classList.remove('no-trans');
+  main.classList.remove('no-trans');
+});
+
+// Прикрепление файлов и кнопка "^"
+const inp = document.getElementById('inp');
+const sndBtn = document.getElementById('sndBtn');
+const attBtn = document.getElementById('attBtn');
+const fInp = document.getElementById('fInp');
+const filesBox = document.getElementById('filesBox');
+let files = [];
+
+const updBtn = () => sndBtn.classList.toggle('vis', inp.value.length > 0 || files.length > 0);
+attBtn.onclick = () => fInp.click();
+fInp.onchange = e => {
+  files = files.concat(Array.from(e.target.files));
+  renderF();
+  updBtn();
+  fInp.value = '';
+};
+
+function renderF() {
+  filesBox.innerHTML = '';
+  filesBox.classList.toggle('show', files.length > 0);
+  files.forEach((f, i) => {
+    const d = document.createElement('div');
+    d.className = 'chip';
+    d.innerHTML = `<span>${f.name}</span><button type="button">&times;</button>`;
+    d.querySelector('button').onclick = () => {
+      files.splice(i, 1);
+      renderF();
+      updBtn();
     };
+    filesBox.appendChild(d);
+  });
+}
 
-    function setRandomGreeting() {
-      const currentHour = new Date().getHours();
-      const phrases = greetingsByHour[currentHour] || greetingsByHour;
-      const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-      document.getElementById('greetingText').textContent = randomPhrase;
+// Посимвольная печать ответа
+const msgs = document.getElementById('msgs');
+const greetBox = document.getElementById('greetBox');
+let activeTypeTimer = null;
+
+function streamAiMessage(text) {
+  const a = document.createElement('div');
+  a.className = 'msg ai';
+  msgs.appendChild(a);
+
+  let idx = 0;
+  if (activeTypeTimer) clearInterval(activeTypeTimer);
+
+  activeTypeTimer = setInterval(() => {
+    if (idx < text.length) {
+      const span = document.createElement('span');
+      span.className = 'char-fade';
+      span.textContent = text[idx];
+      a.appendChild(span);
+      idx++;
+      msgs.scrollTop = msgs.scrollHeight;
+    } else {
+      clearInterval(activeTypeTimer);
+      activeTypeTimer = null;
     }
+  }, 16);
+}
 
-    setRandomGreeting();
+inp.oninput = function() {
+  this.style.height = 'auto';
+  this.style.height = this.scrollHeight + 'px';
+  updBtn();
+};
 
-    // 3. Переключатель темы
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const iconSun = document.getElementById('iconSun');
-    const iconMoon = document.getElementById('iconMoon');
+function send() {
+  const t = inp.value;
+  if (!t.trim() && !files.length) return;
 
-    function applyTheme(isLight) {
-      if (isLight) {
-        document.body.classList.add('light-theme');
-        iconSun.style.display = 'none';
-        iconMoon.style.display = 'block';
-      } else {
-        document.body.classList.remove('light-theme');
-        iconSun.style.display = 'block';
-        iconMoon.style.display = 'none';
-      }
-    }
+  greetBox.style.display = 'none';
+  msgs.classList.add('active');
+  main.classList.add('started');
 
-    const savedTheme = localStorage.getItem('xenon_theme');
-    if (savedTheme === 'light') {
-      applyTheme(true);
-    }
+  const u = document.createElement('div');
+  u.className = 'msg user';
+  u.textContent = t.trim() + (files.length ? `
+[Файлы: ${files.map(f => f.name).join(', ')}]` : '');
+  msgs.appendChild(u);
 
-    themeToggleBtn.addEventListener('click', () => {
-      const isLightNow = !document.body.classList.contains('light-theme');
-      applyTheme(isLightNow);
-      localStorage.setItem('xenon_theme', isLightNow ? 'light' : 'dark');
-    });
+  streamAiMessage('Интерфейс готов к работе. Подключите API-ключ для запуска агентов.');
 
-    // 4. Логика боковой панели, фиксации и регулировки ширины (10% - 20%, закрытие при 5%)
-    const sidebar = document.getElementById('sidebar');
-    const trigger = document.getElementById('sidebarTrigger');
-    const hoverEdge = document.getElementById('hoverEdge');
-    const resizer = document.getElementById('sidebarResizer');
-    const mainContainer = document.getElementById('mainContainer');
+  inp.value = '';
+  inp.style.height = 'auto';
+  files = [];
+  renderF();
+  updBtn();
+}
 
-    let isPinned = false;
-    let isResizing = false;
-    let savedWidthPercent = parseFloat(localStorage.getItem('xenon_sidebar_pct')) || 15;
+sndBtn.onclick = send;
+inp.onkeydown = e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    send();
+  }
+};
 
-    function clampPercent(pct) {
-      return Math.min(20, Math.max(10, pct));
-    }
-
-    function applySidebarWidth() {
-      savedWidthPercent = clampPercent(savedWidthPercent);
-      const pxWidth = Math.round((window.innerWidth * savedWidthPercent) / 100);
-      sidebar.style.width = pxWidth + 'px';
-      if (isPinned && window.innerWidth > 640) {
-        mainContainer.style.marginLeft = pxWidth + 'px';
-      } else {
-        mainContainer.style.marginLeft = '0px';
-      }
-    }
-
-    applySidebarWidth();
-    window.addEventListener('resize', applySidebarWidth);
-
-    function openSidebar() {
-      applySidebarWidth();
-      sidebar.classList.add('open');
-    }
-
-    function closeSidebar() {
-      if (!isPinned && !isResizing) {
-        sidebar.classList.remove('open');
-      }
-    }
-
-    function unpinAndCloseSidebar() {
-      isPinned = false;
-      sidebar.classList.remove('open');
-      trigger.classList.remove('pinned');
-      document.body.classList.remove('sidebar-pinned');
-      mainContainer.style.marginLeft = '0px';
-    }
-
-    trigger.addEventListener('mouseenter', openSidebar);
-    hoverEdge.addEventListener('mouseenter', openSidebar);
-    sidebar.addEventListener('mouseleave', closeSidebar);
-
-    trigger.addEventListener('click', () => {
-      isPinned = !isPinned;
-      if (isPinned) {
-        sidebar.classList.add('open');
-        trigger.classList.add('pinned');
-        document.body.classList.add('sidebar-pinned');
-        applySidebarWidth();
-      } else {
-        unpinAndCloseSidebar();
-      }
-    });
-
-    // Перетягивание правого края зафиксированной панели
-    resizer.addEventListener('mousedown', (e) => {
-      if (!isPinned) return;
-      isResizing = true;
-      sidebar.classList.add('resizing');
-      mainContainer.classList.add('resizing');
-      document.body.style.cursor = 'ew-resize';
-      e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!isResizing) return;
-      const currentPercent = (e.clientX / window.innerWidth) * 100;
-
-      // Порог закрытия: 50% от минимальной ширины (10% * 0.5 = 5% ширины окна)
-      if (currentPercent <= 5) {
-        isResizing = false;
-        sidebar.classList.remove('resizing');
-        mainContainer.classList.remove('resizing');
-        document.body.style.cursor = '';
-        unpinAndCloseSidebar();
-        return;
-      }
-
-      savedWidthPercent = clampPercent(currentPercent);
-      const pxWidth = Math.round((window.innerWidth * savedWidthPercent) / 100);
-      sidebar.style.width = pxWidth + 'px';
-      if (window.innerWidth > 640) {
-        mainContainer.style.marginLeft = pxWidth + 'px';
-      }
-    });
-
-    document.addEventListener('mouseup', () => {
-      if (!isResizing) return;
-      isResizing = false;
-      sidebar.classList.remove('resizing');
-      mainContainer.classList.remove('resizing');
-      document.body.style.cursor = '';
-      localStorage.setItem('xenon_sidebar_pct', savedWidthPercent.toFixed(2));
-    });
-
-    // 5. Управление видимостью кнопки "^"
-    const promptInput = document.getElementById('promptInput');
-    const sendBtn = document.getElementById('sendBtn');
-    let selectedFiles = [];
-
-    function updateSendButtonVisibility() {
-      const hasText = promptInput.value.length > 0;
-      const hasFiles = selectedFiles.length > 0;
-      if (hasText || hasFiles) {
-        sendBtn.classList.add('visible');
-      } else {
-        sendBtn.classList.remove('visible');
-      }
-    }
-
-    // 6. Прикрепление файлов
-    const attachBtn = document.getElementById('attachBtn');
-    const fileInput = document.getElementById('fileInput');
-    const attachedFilesBox = document.getElementById('attachedFiles');
-
-    attachBtn.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', (e) => {
-      const files = Array.from(e.target.files);
-      selectedFiles = selectedFiles.concat(files);
-      renderFiles();
-      updateSendButtonVisibility();
-      fileInput.value = '';
-    });
-
-    function renderFiles() {
-      attachedFilesBox.innerHTML = '';
-      if (selectedFiles.length === 0) {
-        attachedFilesBox.classList.remove('has-files');
-        return;
-      }
-      attachedFilesBox.classList.add('has-files');
-      selectedFiles.forEach((file, index) => {
-        const chip = document.createElement('div');
-        chip.className = 'file-chip';
-        chip.innerHTML = `
-          <span>${file.name}</span>
-          <button type="button">&times;</button>
-        `;
-        chip.querySelector('button').addEventListener('click', () => {
-          selectedFiles.splice(index, 1);
-          renderFiles();
-          updateSendButtonVisibility();
-        });
-        attachedFilesBox.appendChild(chip);
-      });
-    }
-
-    // 7. Плавная быстрая посимвольная печать ответа без рамки и без подписи
-    const messagesArea = document.getElementById('messagesArea');
-    const greetingBox = document.getElementById('greetingBox');
-    const newChatBtn = document.getElementById('newChatBtn');
-
-    function typeTextSmoothly(element, fullText) {
-      let index = 0;
-      element.textContent = '';
-
-      function step() {
-        if (index < fullText.length) {
-          element.textContent += fullText.charAt(index);
-          index++;
-          messagesArea.scrollTop = messagesArea.scrollHeight;
-          setTimeout(step, 16);
-        }
-      }
-      step();
-    }
-
-    promptInput.addEventListener('input', function () {
-      this.style.height = 'auto';
-      this.style.height = this.scrollHeight + 'px';
-      updateSendButtonVisibility();
-    });
-
-    function handleSend() {
-      const text = promptInput.value;
-      if (!text.trim() && selectedFiles.length === 0) return;
-
-      greetingBox.style.display = 'none';
-      messagesArea.classList.add('active');
-      mainContainer.classList.add('chat-started');
-
-      const userMsg = document.createElement('div');
-      userMsg.className = 'msg user';
-      const fileNames = selectedFiles.length
-        ? `
-[Файлы: ${selectedFiles.map(f => f.name).join(', ')}]`
-        : '';
-      userMsg.textContent = text.trim() + fileNames;
-      messagesArea.appendChild(userMsg);
-
-      const aiMsg = document.createElement('div');
-      aiMsg.className = 'msg ai';
-      messagesArea.appendChild(aiMsg);
-
-      const replyText = 'Интерфейс готов к работе. Подключите API-ключ в настройках, чтобы запустить агентов и генерацию артефактов.';
-      typeTextSmoothly(aiMsg, replyText);
-
-      promptInput.value = '';
-      promptInput.style.height = 'auto';
-      selectedFiles = [];
-      renderFiles();
-      updateSendButtonVisibility();
-    }
-
-    sendBtn.addEventListener('click', handleSend);
-
-    promptInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-      }
-    });
-
-    // Сброс в начальный режим по клику на "Новый чат"
-    newChatBtn.addEventListener('click', () => {
-      messagesArea.innerHTML = '';
-      messagesArea.classList.remove('active');
-      mainContainer.classList.remove('chat-started');
-      greetingBox.style.display = 'flex';
-      promptInput.value = '';
-      promptInput.style.height = 'auto';
-      selectedFiles = [];
-      renderFiles();
-      updateSendButtonVisibility();
-      setRandomGreeting();
-    });
-  </script>
+document.getElementById('newBtn').onclick = () => {
+  if (activeTypeTimer) clearInterval(activeTypeTimer);
+  msgs.innerHTML = '';
+  msgs.classList.remove('active');
+  main.classList.remove('started');
+  greetBox.style.display = 'flex';
+  inp.value = '';
+  inp.style.height = 'auto';
+  files = [];
+  renderF();
+  updBtn();
+  setG();
+};
+</script>
 </body>
 </html>
