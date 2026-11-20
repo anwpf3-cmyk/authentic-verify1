@@ -72,10 +72,7 @@ body.resizing {
   cursor: col-resize;
 }
 
-body.resizing iframe {
-  pointer-events: none;
-}
-
+/* Левая кнопка открытия/фиксации бокового меню */
 .trig {
   position: fixed;
   top: 16px;
@@ -96,7 +93,7 @@ body.resizing iframe {
   border: none !important;
 }
 
-/* Кнопка открытия панели артефакта в правом верхнем углу (квадратик с закрашенной правой половиной) */
+/* Правая кнопка возврата закрытого артефакта */
 .art-trig {
   position: fixed;
   top: 16px;
@@ -109,9 +106,9 @@ body.resizing iframe {
   cursor: pointer;
   z-index: 100;
   color: var(--sub);
+  border-radius: 8px;
   background: transparent;
   border: none;
-  border-radius: 7px;
   transition: color 0.15s ease, background 0.15s ease;
 }
 
@@ -234,14 +231,14 @@ body.pinned .resizer { display: block; }
   stroke-linejoin: round;
 }
 
-/* Контейнер рабочей области */
+/* Рабочая область (Чат + Артефакт) */
 .workspace {
   flex: 1;
   display: flex;
   width: 100%;
   height: 100vh;
-  overflow: hidden;
   transition: margin-left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
 }
 
 .workspace.no-trans { transition: none !important; }
@@ -254,8 +251,7 @@ body.pinned .resizer { display: block; }
   justify-content: flex-start;
   padding: 25vh 24px 24px;
   height: 100vh;
-  min-width: 280px;
-  overflow: hidden;
+  min-width: 300px;
   transition: padding 0.25s ease;
 }
 
@@ -334,7 +330,7 @@ body.light .plus-neon {
   max-width: 88%;
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .msg.user {
@@ -353,13 +349,16 @@ body.light .plus-neon {
   width: 100%;
 }
 
-.thinking-pulse {
+.thinking-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
   color: var(--sub);
-  font-size: 13.5px;
   font-style: italic;
 }
 
-/* Баббл-карточка артефакта в чате */
+/* Карточка-баббл артефакта внутри сообщения чата */
 .art-card {
   display: flex;
   align-items: center;
@@ -442,29 +441,31 @@ body.light .plus-neon {
   color: var(--txt);
 }
 
-/* Правая панель просмотра артефактов с регулировкой ширины */
+/* Правая панель просмотра артефактов */
 .art-pane {
   position: relative;
   width: 0;
   opacity: 0;
   overflow: hidden;
   background: var(--art-bg);
-  border-left: 1px solid var(--brd);
+  border-left: none;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
   transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+  flex-shrink: 0;
 }
 
-.art-pane.no-trans {
-  transition: none !important;
-}
+.art-pane.no-trans { transition: none !important; }
 
 .art-pane.open {
+  width: 48%;
   opacity: 1;
+  border-left: 1px solid var(--brd);
 }
 
+/* Регулятор ширины артефакта на левой границе панели */
 .art-resizer {
+  display: none;
   position: absolute;
   top: 0;
   left: -4px;
@@ -474,15 +475,8 @@ body.light .plus-neon {
   z-index: 110;
 }
 
-.art-resizer:hover::after,
-body.resizing .art-resizer::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 4px;
-  width: 2px;
-  height: 100%;
-  background: var(--fbrd);
+.art-pane.open .art-resizer {
+  display: block;
 }
 
 .art-nav {
@@ -567,7 +561,7 @@ body.resizing .art-resizer::after {
   width: 100%;
 }
 
-/* Текст и код всегда переносятся по ширине без горизонтального ползунка */
+/* Текст и код без горизонтального скролла (перенос строк) */
 .art-code-view {
   padding: 18px;
   font-family: 'JetBrains Mono', monospace;
@@ -576,7 +570,7 @@ body.resizing .art-resizer::after {
   color: var(--txt);
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   overflow-x: hidden;
   width: 100%;
   min-height: 100%;
@@ -731,11 +725,11 @@ textarea::placeholder { color: var(--sub); }
 
 <div class="trig" id="trig">l l</div>
 
-<!-- Иконка в правом верхнем углу (появляется после закрытия артефакта) -->
-<button type="button" class="art-trig" id="artTrig" title="Открыть панель артефакта">
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <rect x="1.5" y="2" width="13" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/>
-    <path d="M8 2H12.5C13.6046 2 14.5 2.89543 14.5 4V12C14.5 13.1046 13.6046 14 12.5 14H8V2Z" fill="currentColor"/>
+<button type="button" class="art-trig" id="artTrig" title="Открыть артефакт">
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+    <rect x="2.2" y="2.2" width="13.6" height="13.6" rx="2.4" stroke="currentColor" stroke-width="1.4"/>
+    <path d="M9 2.2H13.4C14.7255 2.2 15.8 3.27452 15.8 4.6V13.4C15.8 14.7255 14.7255 15.8 13.4 15.8H9V2.2Z" fill="currentColor"/>
+    <line x1="9" y1="2.2" x2="9" y2="15.8" stroke="currentColor" stroke-width="1.4"/>
   </svg>
 </button>
 
@@ -805,16 +799,14 @@ textarea::placeholder { color: var(--sub); }
 </div>
 
 <script>
-const dot = String.fromCharCode(46);
-const GIST_RAW_URL = `https://gist${dot}githubusercontent${dot}com/anwpf3-cmyk/c37340f36d1436d0910963fafe12e98f/raw/api_url${dot}json`;
+const GIST_RAW_URL = "https://gist.githubusercontent.com/anwpf3-cmyk/c37340f36d1436d0910963fafe12e98f/raw/api_url.json";
 
-const SYSTEM_PROMPT = `Ты Ксенон — точный и лаконичный ИИ-ассистент. Отвечай на языке пользователя.
-Если пользователь задаёт обычный вопрос или здоровается — отвечай кратко и по делу обычным текстом.
-ТОЛЬКО если пользователь явно просит написать программу, веб-страницу, скрипт, игру или большой документ, оформи результат в виде блока кода с указанием имени файла после двоеточия:
-\`\`\`file:index.html
-...полный код...
+const SYSTEM_PROMPT = `Ты Ксенон — точный и лаконичный ИИ-ассистент. Отвечай кратко и по делу.
+Только если пользователь явно просит написать код, веб-страницу, скрипт, программу или создать отдельный документ, оформи результат в специальном блоке:
+\`\`\`file:имя_файла.расширение
+...полный код или текст документа...
 \`\`\`
-Не используй формат file:... в обычных ответах.`;
+В остальных случаях (приветствия, вопросы, советы) отвечай обычным текстом без блоков file:.`;
 
 let chatHistory = [];
 let artifacts = [];
@@ -822,6 +814,7 @@ let currentArtifact = null;
 let currentMode = 'preview';
 let isGenerating = false;
 
+// Приветствия по часам
 const G = {
   0: ["Полночь открывает чистый лист для идей.", "С новым днем и ясными мыслями!", "В звездной тишине так легко сосредоточиться."],
   1: ["Ночной покой помогает поймать нужный ритм.", "Время глубокого фокуса и смелых решений.", "Тишина вокруг создана для твоих планов."],
@@ -872,7 +865,7 @@ thmBtn.onclick = () => {
   localStorage.setItem('x_thm', l ? 'light' : 'dark');
 };
 
-// Левая панель
+// Левая боковая панель
 const sb = document.getElementById('sb');
 const trig = document.getElementById('trig');
 const workspace = document.getElementById('workspace');
@@ -925,7 +918,7 @@ resizer.addEventListener('mousedown', (e) => {
   workspace.classList.add('no-trans');
 });
 
-// === УПРАВЛЕНИЕ АРТЕФАКТАМИ И РЕГУЛИРОВКА ИХ ШИРИНЫ ===
+// === УПРАВЛЕНИЕ АРТЕФАКТАМИ И ИХ ШИРИНОЙ ===
 const artPane = document.getElementById('artPane');
 const artResizer = document.getElementById('artResizer');
 const artTrig = document.getElementById('artTrig');
@@ -947,7 +940,7 @@ function applyArtWidth() {
     artPane.style.width = '100%';
     return;
   }
-  artPct = Math.min(72, Math.max(26, artPct));
+  artPct = Math.min(75, Math.max(25, artPct));
   artPane.style.width = artPct + '%';
 }
 
@@ -959,6 +952,9 @@ artResizer.addEventListener('mousedown', (e) => {
   isResizingArt = true;
   document.body.classList.add('resizing');
   artPane.classList.add('no-trans');
+  // Отключаем перехват мыши у iframe при перетаскивании
+  const frame = artBody.querySelector('iframe');
+  if (frame) frame.style.pointerEvents = 'none';
 });
 
 window.addEventListener('mousemove', (e) => {
@@ -981,9 +977,9 @@ window.addEventListener('mousemove', (e) => {
     const wsRect = workspace.getBoundingClientRect();
     const rightWidth = wsRect.right - e.clientX;
     const rawArtPct = (rightWidth / wsRect.width) * 100;
-    artPct = Math.min(72, Math.max(26, rawArtPct));
+    artPct = Math.min(75, Math.max(25, rawArtPct));
     localStorage.setItem('x_art_pct', artPct.toFixed(2));
-    applyArtWidth();
+    artPane.style.width = artPct + '%';
   }
 });
 
@@ -998,6 +994,8 @@ window.addEventListener('mouseup', () => {
     isResizingArt = false;
     document.body.classList.remove('resizing');
     artPane.classList.remove('no-trans');
+    const frame = artBody.querySelector('iframe');
+    if (frame) frame.style.pointerEvents = 'auto';
   }
 });
 
@@ -1037,7 +1035,6 @@ function renderArtifactPane() {
 }
 
 function openArtifact(art, autoPreview = true) {
-  if (!art) return;
   currentArtifact = art;
   if (autoPreview) {
     currentMode = /\.(html|htm|svg)$/i.test(art.filename) ? 'preview' : 'code';
@@ -1055,7 +1052,7 @@ function closeArtifactPane() {
   artPane.classList.remove('open');
   artPane.style.width = '0px';
   document.querySelectorAll('.art-card').forEach(el => el.classList.remove('active'));
-  if (currentArtifact || artifacts.length > 0) {
+  if (currentArtifact) {
     artTrig.classList.add('vis');
   }
 }
@@ -1064,10 +1061,8 @@ tabPreview.onclick = () => { currentMode = 'preview'; renderArtifactPane(); };
 tabCode.onclick = () => { currentMode = 'code'; renderArtifactPane(); };
 document.getElementById('btnCloseArt').onclick = closeArtifactPane;
 artTrig.onclick = () => {
-  const target = currentArtifact || artifacts[artifacts.length - 1];
-  if (target) openArtifact(target, true);
+  if (currentArtifact) openArtifact(currentArtifact, false);
 };
-
 document.getElementById('btnDlArt').onclick = () => { if (currentArtifact) downloadArtifact(currentArtifact); };
 document.getElementById('btnCopyArt').onclick = () => {
   if (!currentArtifact) return;
@@ -1116,56 +1111,67 @@ inp.oninput = function() {
   updBtn();
 };
 
-// === ОЧИСТКА МЫСЛЕЙ (THINKING PROCESS) И РЕНДЕР ОТВЕТА ===
+// === ФИЛЬТРАЦИЯ МЫСЛЕЙ МОДЕЛИ И ПАРСИНГ АРТЕФАКТОВ ===
 const msgs = document.getElementById('msgs');
 const greetBox = document.getElementById('greetBox');
 
 function stripThinking(raw) {
-  let text = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-  if (/<think>/i.test(raw) && !/<\/think>/i.test(raw)) {
-    return { clean: '', isThinking: true };
+  // 1. Вырезаем стандартные теги <think>...</think>
+  let text = raw.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  if (/<think>/i.test(text)) {
+    return { text: '', isThinking: true };
   }
-  if (/^Thinking Process:/i.test(text)) {
-    const finalMatch = text.match(/(?:Final choice:|Final Answer:|Финальный ответ:|Ответ:)\s*([\s\S]*)$/i);
+
+  // 2. Вырезаем текстовые рассуждения Qwen вида "Thinking Process: ... Final choice:"
+  if (/^\s*Thinking Process:/i.test(text)) {
+    const finalMatch = text.match(/(?:Final choice:|Final response:|Final answer:|Ответ:)\s*([\s\S]*)$/i);
     if (finalMatch) {
-      text = finalMatch[1].trim();
-    } else {
-      return { clean: '', isThinking: true };
+      return { text: finalMatch[1].trim(), isThinking: false };
     }
+    const paragraphs = text.split(/
+\s*
+/);
+    if (paragraphs.length > 1) {
+      const lastP = paragraphs[paragraphs.length - 1].trim();
+      if (!/^\d+\.|^\*|^Draft:|^Revised|^Self-Correction:/i.test(lastP)) {
+        return { text: lastP, isThinking: false };
+      }
+    }
+    return { text: '', isThinking: true };
   }
-  return { clean: text, isThinking: false };
+
+  return { text: text.trim(), isThinking: false };
 }
 
 function renderAiContent(container, rawText, artObj) {
-  const { clean, isThinking } = stripThinking(rawText);
+  const { text: cleanText, isThinking } = stripThinking(rawText);
 
-  if (isThinking && !clean) {
-    container.innerHTML = '<span class="thinking-pulse">Думаю...</span>';
+  if (isThinking && !cleanText) {
+    container.innerHTML = '<span class="thinking-badge">Думаю...</span>';
     return;
   }
 
-  const fileMatch = clean.match(/```file:([^
-
-`]+)
-?
+  // Ищем блок ```file:имя.расширение ... ```
+  const fileMatch = cleanText.match(/```file:([^\s
+]+)
 ([\s\S]*?)(?:```|$)/);
   if (!fileMatch) {
-    container.textContent = clean;
+    container.textContent = cleanText || '...';
     return;
   }
 
   const filename = fileMatch[1].trim();
-  const codeContent = fileMatch[2].replace(/^
-+|
-+$/g, '');
+  const codeContent = fileMatch[2].trim();
 
   artObj.filename = filename;
   artObj.title = filename;
   artObj.content = codeContent;
 
-  const beforeText = clean.slice(0, fileMatch.index).trim();
+  const beforeText = cleanText.slice(0, fileMatch.index).trim();
   const afterIdx = fileMatch.index + fileMatch[0].length;
-  const afterText = clean.slice(fileMatch.index).includes('```', 7) ? clean.slice(afterIdx).trim() : '';
+  const hasClosing = cleanText.slice(fileMatch.index).includes('
+```');
+  const afterText = hasClosing ? cleanText.slice(afterIdx).trim() : '';
 
   container.innerHTML = '';
   if (beforeText) {
@@ -1252,7 +1258,7 @@ async function send() {
 
   const aiDiv = document.createElement('div');
   aiDiv.className = 'msg ai';
-  aiDiv.innerHTML = '<span class="thinking-pulse">Подключение...</span>';
+  aiDiv.innerHTML = '<span class="thinking-badge">Подключение...</span>';
   msgs.appendChild(aiDiv);
   msgs.scrollTop = msgs.scrollHeight;
 
@@ -1262,7 +1268,7 @@ async function send() {
   renderF();
   updBtn();
 
-  const artObj = { id: 'art_' + Date.now(), filename: 'code.txt', title: 'Артефакт', content: '' };
+  const artObj = { id: 'art_' + Date.now(), filename: 'document.txt', title: 'document.txt', content: '' };
 
   try {
     const gistRes = await fetch(`${GIST_RAW_URL}?t=${Date.now()}`);
@@ -1278,7 +1284,7 @@ async function send() {
           ...chatHistory,
           { role: 'user', content: fullPromptForAi }
         ],
-        temperature: 0.7,
+        temperature: 0.6,
         max_tokens: 4096,
         stream: true
       })
@@ -1313,11 +1319,7 @@ async function send() {
       }
     }
 
-    const { clean: finalClean } = stripThinking(fullResponse);
-    if (!finalClean) {
-      aiDiv.textContent = fullResponse.replace(/<think>|<\/think>/gi, '').trim();
-    }
-
+    const { text: finalClean } = stripThinking(fullResponse);
     if (artObj.content) {
       artifacts.push(artObj);
       openArtifact(artObj, true);
