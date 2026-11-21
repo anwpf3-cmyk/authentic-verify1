@@ -1,1452 +1,796 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ксенон</title>
-  <link id="fav1" rel="shortcut icon" type="image/png">
-  <link id="fav2" rel="icon" type="image/png">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-  <script>
-    (function() {
-      var c = document.createElement('canvas');
-      c.width = 16;
-      c.height = 16;
-      var ctx = c.getContext('2d');
-      ctx.fillStyle = '#E8EAED';
-      ctx.fillRect(7, 3, 2, 10);
-      ctx.fillRect(3, 7, 10, 2);
-      var url = c.toDataURL('image/png');
-      document.getElementById('fav1').href = url;
-      document.getElementById('fav2').href = url;
-    })();
-  </script>
-  <style>
-    :root {
-      --bg: #121110;
-      --sb: #0D0C0B;
-      --inp: #1A1917;
-      --hov: #242220;
-      --umsg: #22201E;
-      --brd: #292724;
-      --fbrd: #3E3B36;
-      --txt: #F0EDE6;
-      --sub: #8A867E;
-      --sbg: #F0EDE6;
-      --scol: #121110;
-      --art-bg: #161513;
-    }
-
-    body.light {
-      --bg: #EAE8E4;
-      --sb: #E0DDD7;
-      --inp: #F4F3F0;
-      --hov: #D5D1C9;
-      --umsg: #DCD8D0;
-      --brd: #CFCBC2;
-      --fbrd: #B5B0A5;
-      --txt: #1A1917;
-      --sub: #6B675E;
-      --sbg: #1A1917;
-      --scol: #F4F3F0;
-      --art-bg: #F2F0EC;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--txt);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      transition: background 0.2s ease, color 0.2s ease;
-    }
-
-    body.resizing {
-      user-select: none;
-      cursor: col-resize;
-    }
-
-    /* Кликабельная область символа l l в левом верхнем углу */
-    .trig {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      width: 34px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 100;
-      color: var(--sub);
-      font-size: 19px;
-      font-weight: 300;
-      letter-spacing: -0.04em;
-      user-select: none;
-      background: transparent !important;
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-
-    .trig:hover,
-    .trig:active,
-    .trig:focus,
-    .trig.pin {
-      background: transparent !important;
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-      color: var(--txt);
-    }
-
-    /* Кнопка возврата артефакта в правом верхнем углу */
-    .art-reopen {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      width: 34px;
-      height: 32px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 100;
-      color: var(--sub);
-      background: transparent;
-      border: none;
-      border-radius: 6px;
-      transition: color 0.15s ease, background 0.15s ease;
-    }
-
-    .art-reopen.vis {
-      display: flex;
-    }
-
-    .art-reopen:hover {
-      color: var(--txt);
-      background: var(--hov);
-    }
-
-    /* Выдвижная левая боковая панель */
-    .sb {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 240px;
-      height: 100vh;
-      background: var(--sb);
-      border-right: 1px solid var(--brd);
-      box-shadow: none !important;
-      padding: 18px 14px 14px;
-      display: flex;
-      flex-direction: column;
-      transform: translateX(-100%);
-      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease, border-color 0.2s ease;
-      z-index: 95;
-    }
-
-    .sb.no-trans {
-      transition: none !important;
-    }
-
-    .sb.open {
-      transform: translateX(0);
-    }
-
-    .resizer {
-      display: none;
-      position: absolute;
-      top: 0;
-      right: -4px;
-      width: 8px;
-      height: 100%;
-      cursor: col-resize;
-      z-index: 105;
-    }
-
-    body.pinned .resizer {
-      display: block;
-    }
-
-    .sb-head {
-      display: flex;
-      align-items: center;
-      padding-left: 44px;
-      height: 28px;
-      margin-bottom: 18px;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-
-    .brand {
-      font-family: 'Lora', Georgia, serif;
-      font-size: 19px;
-      font-weight: 500;
-      color: var(--txt);
-    }
-
-    .new-btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-      padding: 9px 12px;
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      color: var(--txt);
-      font-size: 13.5px;
-      cursor: pointer;
-      transition: background 0.15s ease;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-
-    .new-btn:hover {
-      background: var(--hov);
-    }
-
-    .ad-box {
-      margin-top: auto;
-      margin-bottom: 12px;
-      padding: 10px;
-      border: 1px dashed var(--brd);
-      border-radius: 10px;
-      font-size: 11px;
-      color: var(--sub);
-      text-align: center;
-      line-height: 1.4;
-    }
-
-    .sb-foot {
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .thm-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 7px;
-      background: transparent;
-      border: none;
-      color: var(--sub);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
-    }
-
-    .thm-btn:hover {
-      background: var(--hov);
-      color: var(--txt);
-    }
-
-    .thm-btn svg {
-      width: 15px;
-      height: 15px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 1.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    /* Рабочая область (Чат + Артефакт) */
-    .workspace {
-      flex: 1;
-      display: flex;
-      width: 100%;
-      height: 100vh;
-      overflow: hidden;
-      transition: margin-left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .workspace.no-trans {
-      transition: none !important;
-    }
-
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 25vh 24px 24px;
-      height: 100vh;
-      min-width: 300px;
-      transition: padding 0.25s ease;
-    }
-
-    .wrap {
-      width: 100%;
-      max-width: 740px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .main.started {
-      justify-content: flex-end;
-      padding-top: 54px;
-      padding-bottom: 18px;
-    }
-
-    .main.started .wrap {
-      height: 100%;
-      justify-content: space-between;
-    }
-
-    .greet {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      margin-bottom: 26px;
-      text-align: center;
-    }
-
-    .plus-neon {
-      font-size: 28px;
-      color: #FFFFFF;
-      line-height: 1;
-      user-select: none;
-      text-shadow:
-        0 0 6px #FFFFFF,
-        0 0 14px rgba(255, 255, 255, 0.9),
-        0 0 26px rgba(255, 255, 255, 0.7);
-    }
-
-    body.light .plus-neon {
-      text-shadow:
-        0 0 3px #FFFFFF,
-        0 0 10px #FFFFFF,
-        0 0 18px rgba(130, 125, 115, 0.75);
-    }
-
-    .greet-txt {
-      font-family: 'Lora', Georgia, serif;
-      font-size: 27px;
-      font-weight: 400;
-      color: var(--txt);
-      line-height: 1.3;
-    }
-
-    /* Сообщения */
-    .msgs {
-      display: none;
-      width: 100%;
-      flex: 1;
-      flex-direction: column;
-      gap: 18px;
-      margin-bottom: 14px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-right: 6px;
-    }
-
-    .msgs.active {
-      display: flex;
-    }
-
-    .msg {
-      font-size: 14.5px;
-      line-height: 1.65;
-      max-width: 88%;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    .msg.user {
-      align-self: flex-end;
-      background: var(--umsg);
-      padding: 10px 15px;
-      border-radius: 12px;
-    }
-
-    .msg.ai {
-      align-self: flex-start;
-      background: transparent;
-      border: none;
-      padding: 4px 2px;
-      color: var(--txt);
-      width: 100%;
-    }
-
-    .thinking-badge {
-      font-size: 13px;
-      color: var(--sub);
-      font-style: italic;
-    }
-
-    /* Баббл-карточка артефакта внутри чата */
-    .art-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin: 12px 0 4px;
-      padding: 12px 14px;
-      background: var(--inp);
-      border: 1px solid var(--brd);
-      border-radius: 12px;
-      max-width: 380px;
-      cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease;
-      user-select: none;
-    }
-
-    .art-card:hover,
-    .art-card.active {
-      background: var(--hov);
-      border-color: var(--fbrd);
-    }
-
-    .art-card-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      overflow: hidden;
-    }
-
-    .art-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      background: var(--bg);
-      border: 1px solid var(--brd);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--sub);
-      flex-shrink: 0;
-    }
-
-    .art-meta {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .art-title {
-      font-size: 13.5px;
-      font-weight: 500;
-      color: var(--txt);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .art-ext {
-      font-size: 11.5px;
-      color: var(--sub);
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .art-dl-mini {
-      width: 30px;
-      height: 30px;
-      border-radius: 7px;
-      border: 1px solid var(--brd);
-      background: transparent;
-      color: var(--sub);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .art-dl-mini:hover {
-      background: var(--bg);
-      color: var(--txt);
-    }
-
-    /* Правая панель просмотра артефактов */
-    .art-pane {
-      position: relative;
-      width: 0;
-      opacity: 0;
-      overflow: hidden;
-      background: var(--art-bg);
-      border-left: 1px solid var(--brd);
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-      transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
-    }
-
-    .art-pane.no-trans {
-      transition: none !important;
-    }
-
-    .art-pane.open {
-      opacity: 1;
-    }
-
-    .art-resizer {
-      position: absolute;
-      top: 0;
-      left: -4px;
-      width: 8px;
-      height: 100%;
-      cursor: col-resize;
-      z-index: 110;
-    }
-
-    .art-resizer:hover::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 3px;
-      width: 2px;
-      height: 100%;
-      background: var(--fbrd);
-    }
-
-    .art-nav {
-      height: 48px;
-      padding: 0 14px;
-      border-bottom: 1px solid var(--brd);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      background: var(--sb);
-      flex-shrink: 0;
-    }
-
-    .art-nav-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--txt);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .art-nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .art-tabs {
-      display: flex;
-      background: var(--inp);
-      border: 1px solid var(--brd);
-      border-radius: 7px;
-      padding: 2px;
-    }
-
-    .art-tab {
-      padding: 3px 9px;
-      font-size: 12px;
-      border: none;
-      background: transparent;
-      color: var(--sub);
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .art-tab.active {
-      background: var(--hov);
-      color: var(--txt);
-      font-weight: 500;
-    }
-
-    .nav-icon-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      border: none;
-      background: transparent;
-      color: var(--sub);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .nav-icon-btn:hover {
-      background: var(--hov);
-      color: var(--txt);
-    }
-
-    .art-body {
-      flex: 1;
-      position: relative;
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
-
-    .art-code-view {
-      padding: 18px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--txt);
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      overflow-x: hidden;
-      width: 100%;
-      min-height: 100%;
-    }
-
-    .art-preview-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #FFFFFF;
-      display: block;
-    }
-
-    /* Поле ввода */
-    .pbox {
-      width: 100%;
-      background: var(--inp);
-      border: 1px solid var(--brd);
-      border-radius: 16px;
-      padding: 14px 14px 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: border-color 0.2s ease, background 0.2s ease;
-    }
-
-    .pbox:focus-within {
-      border-color: var(--fbrd);
-    }
-
-    .main.started .pbox {
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      padding: 8px 10px;
-      border-radius: 14px;
-      gap: 8px;
-    }
-
-    .files {
-      display: none;
-      flex-wrap: wrap;
-      gap: 8px;
-      width: 100%;
-    }
-
-    .files.show {
-      display: flex;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--hov);
-      border: 1px solid var(--brd);
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 8px;
-    }
-
-    .chip button {
-      background: none;
-      border: none;
-      color: var(--sub);
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    textarea {
-      width: 100%;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--txt);
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      line-height: 1.5;
-      resize: none;
-      min-height: 44px;
-      max-height: 200px;
-    }
-
-    .main.started textarea {
-      flex: 1;
-      width: auto;
-      min-height: 24px;
-      max-height: 140px;
-      order: 2;
-      padding: 4px 2px;
-    }
-
-    textarea::placeholder {
-      color: var(--sub);
-    }
-
-    .pbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-    }
-
-    .main.started .pbar {
-      display: contents;
-    }
-
-    .att-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: transparent;
-      border: none;
-      color: var(--sub);
-      font-size: 22px;
-      font-weight: 300;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .main.started .att-btn {
-      order: 1;
-    }
-
-    .att-btn:hover {
-      background: var(--hov);
-      color: var(--txt);
-    }
-
-    .snd-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: var(--sbg);
-      border: none;
-      color: var(--scol);
-      font-size: 18px;
-      font-weight: 600;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      padding-top: 4px;
-      flex-shrink: 0;
-      margin-left: auto;
-    }
-
-    .snd-btn.vis {
-      display: flex;
-    }
-
-    .snd-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .main.started .snd-btn {
-      order: 3;
-      margin-left: 0;
-    }
-
-    @media (max-width: 820px) {
-      .art-pane.open {
-        position: fixed;
-        inset: 0;
-        width: 100% !important;
-        z-index: 120;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .greet-txt {
-        font-size: 21px;
-      }
-      .main {
-        padding-top: 18vh;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Новый чат</title>
+<link id="fav1" rel="shortcut icon" type="image/png">
+<link id="fav2" rel="icon" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+<script>
+(function(){
+  var c = document.createElement('canvas');
+  c.width = 16; c.height = 16;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#E8EAED';
+  ctx.fillRect(7, 3, 2, 10);
+  ctx.fillRect(3, 7, 10, 2);
+  var url = c.toDataURL('image/png');
+  document.getElementById('fav1').href = url;
+  document.getElementById('fav2').href = url;
+})();
+</script>
+<style>
+:root {
+  /* Тёмная тема: глубокий тёплый нуар (мокрый базальт и обсидиан) */
+  --bg: #121110;
+  --sb: #0D0C0B;
+  --inp: #1A1917;
+  --hov: #242220;
+  --umsg: #22201E;
+  --brd: #292724;
+  --fbrd: #3E3B36;
+  --txt: #F0EDE6;
+  --sub: #8A867E;
+  --sbg: #F0EDE6;
+  --scol: #121110;
+}
+
+body.light {
+  /* Светлая тема: тёплый нуар (тёплый алебастр и дымчатый туман, на 50% светлее) */
+  --bg: #EAE8E4;
+  --sb: #E0DDD7;
+  --inp: #F4F3F0;
+  --hov: #D5D1C9;
+  --umsg: #DCD8D0;
+  --brd: #CFCBC2;
+  --fbrd: #B5B0A5;
+  --txt: #1A1917;
+  --sub: #6B675E;
+  --sbg: #1A1917;
+  --scol: #F4F3F0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+body.resizing {
+  user-select: none;
+  cursor: col-resize;
+}
+
+/* Кликабельная область символа l l в левом верхнем углу */
+.trig {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 34px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  color: var(--sub);
+  font-size: 19px;
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  user-select: none;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.trig:hover,
+.trig:active,
+.trig:focus,
+.trig.pin {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: var(--sub);
+}
+
+/* Выдвижная боковая панель без тени, только тонкая линия справа */
+.sb {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: var(--sb);
+  border-right: 1px solid var(--brd);
+  box-shadow: none !important;
+  padding: 18px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease, border-color 0.2s ease;
+  z-index: 95;
+}
+
+.sb.no-trans {
+  transition: none !important;
+}
+
+.sb.open {
+  transform: translateX(0);
+}
+
+.resizer {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 105;
+}
+
+body.pinned .resizer {
+  display: block;
+}
+
+.sb-head {
+  display: flex;
+  align-items: center;
+  padding-left: 44px;
+  height: 28px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.brand {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--txt);
+}
+
+.new-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--txt);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.new-btn:hover {
+  background: var(--hov);
+}
+
+.sb-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.thm-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  color: var(--sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.thm-btn:hover {
+  background: var(--hov);
+  color: var(--txt);
+}
+
+.thm-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Основная рабочая область */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 25vh 24px 24px;
+  transition: margin-left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%;
+  height: 100vh;
+}
+
+.main.no-trans {
+  transition: none !important;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 740px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Режим активного чата (строка ввода опускается вниз и компактируется) */
+.main.started {
+  justify-content: flex-end;
+  padding-top: 54px;
+  padding-bottom: 18px;
+}
+
+.main.started .wrap {
+  height: 100%;
+  justify-content: space-between;
+}
+
+/* Приветствие */
+.greet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 26px;
+  text-align: center;
+}
+
+.plus-neon {
+  font-size: 28px;
+  color: #FFFFFF;
+  line-height: 1;
+  user-select: none;
+  text-shadow:
+    0 0 6px #FFFFFF,
+    0 0 14px rgba(255, 255, 255, 0.9),
+    0 0 26px rgba(255, 255, 255, 0.7);
+}
+
+body.light .plus-neon {
+  text-shadow:
+    0 0 3px #FFFFFF,
+    0 0 10px #FFFFFF,
+    0 0 18px rgba(130, 125, 115, 0.75);
+}
+
+.greet-txt {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 27px;
+  font-weight: 400;
+  color: var(--txt);
+  line-height: 1.3;
+}
+
+/* Сообщения */
+.msgs {
+  display: none;
+  width: 100%;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 14px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.msgs.active {
+  display: flex;
+}
+
+.msg {
+  font-size: 14.5px;
+  line-height: 1.6;
+  max-width: 85%;
+  white-space: pre-wrap;
+}
+
+.msg.user {
+  align-self: flex-end;
+  background: var(--umsg);
+  padding: 10px 15px;
+  border-radius: 12px;
+}
+
+.msg.ai {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+  color: var(--txt);
+}
+
+.char-fade {
+  display: inline;
+  animation: charReveal 0.16s ease-out forwards;
+}
+
+@keyframes charReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Поле ввода */
+.pbox {
+  width: 100%;
+  background: var(--inp);
+  border: 1px solid var(--brd);
+  border-radius: 16px;
+  padding: 14px 14px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.pbox:focus-within {
+  border-color: var(--fbrd);
+}
+
+.main.started .pbox {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 14px;
+  gap: 8px;
+}
+
+.files {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.files.show {
+  display: flex;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--hov);
+  border: 1px solid var(--brd);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.chip button {
+  background: none;
+  border: none;
+  color: var(--sub);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--txt);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: none;
+  min-height: 44px;
+  max-height: 200px;
+}
+
+.main.started textarea {
+  flex: 1;
+  width: auto;
+  min-height: 24px;
+  max-height: 140px;
+  order: 2;
+  padding: 4px 2px;
+}
+
+textarea::placeholder {
+  color: var(--sub);
+}
+
+.pbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.main.started .pbar {
+  display: contents;
+}
+
+.att-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--sub);
+  font-size: 22px;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.main.started .att-btn {
+  order: 1;
+}
+
+.att-btn:hover {
+  background: var(--hov);
+  color: var(--txt);
+}
+
+.snd-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--sbg);
+  border: none;
+  color: var(--scol);
+  font-size: 18px;
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding-top: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.snd-btn.vis {
+  display: flex;
+}
+
+.main.started .snd-btn {
+  order: 3;
+  margin-left: 0;
+}
+
+@media (max-width: 640px) {
+  .greet-txt {
+    font-size: 21px;
+  }
+  .main {
+    padding-top: 18vh;
+  }
+}
+</style>
 </head>
 <body>
 
-  <div class="trig" id="trig">l l</div>
+<div class="trig" id="trig">l l</div>
 
-  <button type="button" class="art-reopen" id="artReopenBtn" title="Открыть артефакт">
-    <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
-      <rect x="2" y="2.5" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.4"/>
-      <path d="M9 2.5H14C15.1046 2.5 16 3.39543 16 4.5V13.5C16 14.6046 15.1046 15.5 14 15.5H9V2.5Z" fill="currentColor"/>
-    </svg>
-  </button>
-
-  <aside class="sb" id="sb">
-    <div class="resizer" id="resizer"></div>
-    <div class="sb-head"><span class="brand">Ксенон</span></div>
-    <button class="new-btn" id="newBtn"><span>+</span><span>Новый чат</span></button>
-    <div class="ad-box" id="adSlot">Контекстная реклама<br>(Zero-Data)</div>
-    <div class="sb-foot">
-      <button class="thm-btn" id="thmBtn" title="Сменить тему">
-        <svg id="iSun" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-        </svg>
-        <svg id="iMoon" viewBox="0 0 24 24" style="display:none">
-          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-        </svg>
-      </button>
-    </div>
-  </aside>
-
-  <div class="workspace" id="workspace">
-    <main class="main" id="main">
-      <div class="wrap">
-        <div class="greet" id="greetBox">
-          <span class="plus-neon">+</span>
-          <h1 class="greet-txt" id="greetTxt"></h1>
-        </div>
-        <div class="msgs" id="msgs"></div>
-        <div class="pbox">
-          <div class="files" id="filesBox"></div>
-          <textarea id="inp" placeholder="Чем я могу помочь сегодня?" rows="1"></textarea>
-          <div class="pbar">
-            <input type="file" id="fInp" multiple hidden>
-            <button type="button" class="att-btn" id="attBtn">+</button>
-            <button type="button" class="snd-btn" id="sndBtn">^</button>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <section class="art-pane" id="artPane">
-      <div class="art-resizer" id="artResizer"></div>
-      <div class="art-nav">
-        <div class="art-nav-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <span id="artPaneName">document.txt</span>
-        </div>
-        <div class="art-nav-actions">
-          <div class="art-tabs" id="artTabs">
-            <button type="button" class="art-tab active" id="tabPreview">Превью</button>
-            <button type="button" class="art-tab" id="tabCode">Код</button>
-          </div>
-          <button type="button" class="nav-icon-btn" id="btnCopyArt" title="Копировать код">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <rect x="9" y="9" width="13" height="13" rx="2"/>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-          </button>
-          <button type="button" class="nav-icon-btn" id="btnDlArt" title="Скачать файл">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-          </button>
-          <button type="button" class="nav-icon-btn" id="btnCloseArt" title="Закрыть панель">✕</button>
-        </div>
-      </div>
-      <div class="art-body" id="artBody"></div>
-    </section>
+<aside class="sb" id="sb">
+  <div class="resizer" id="resizer"></div>
+  <div class="sb-head"><span class="brand">Ксенон</span></div>
+  <button class="new-btn" id="newBtn"><span>+</span><span>Новый чат</span></button>
+  <div class="sb-foot">
+    <button class="thm-btn" id="thmBtn" title="Сменить тему">
+      <svg id="iSun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+      </svg>
+      <svg id="iMoon" viewBox="0 0 24 24" style="display:none">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+      </svg>
+    </button>
   </div>
+</aside>
 
-  <script>
-    const dot = String.fromCharCode(46);
-    const GIST_RAW_URL = "https://gist" + dot + "githubusercontent" + dot + "com/anwpf3-cmyk/c37340f36d1436d0910963fafe12e98f/raw/api_url.json";
+<main class="main" id="main">
+  <div class="wrap">
+    <div class="greet" id="greetBox">
+      <span class="plus-neon">+</span>
+      <h1 class="greet-txt" id="greetTxt"></h1>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="pbox">
+      <div class="files" id="filesBox"></div>
+      <textarea id="inp" placeholder="Чем я могу помочь сегодня?" rows="1"></textarea>
+      <div class="pbar">
+        <input type="file" id="fInp" multiple hidden>
+        <button type="button" class="att-btn" id="attBtn">+</button>
+        <button type="button" class="snd-btn" id="sndBtn">^</button>
+      </div>
+    </div>
+  </div>
+</main>
 
-    const SYSTEM_PROMPT = `Ты Ксенон — точный, умный и лаконичный ИИ-ассистент.
-На обычные вопросы, приветствия и беседы отвечай кратко и по делу обычным текстом.
-ТОЛЬКО когда пользователь прямо просит написать программу, скрипт, веб-страницу, игру или большой документ, оформи результат как отдельный файл с помощью блока кода с префиксом file:имя_файла.расширение, например:
-\`\`\`file:index.html
-<!DOCTYPE html>
-...код...
-\`\`\`
-или
-\`\`\`file:script.py
-...код...
-\`\`\`
-Никогда не используй формат \`\`\`file: при обычном общении.`;
+<script>
+const G = {
+  0: ["Полночь открывает чистый лист для идей.", "С новым днем и ясными мыслями!", "В звездной тишине так легко сосредоточиться."],
+  1: ["Ночной покой помогает поймать нужный ритм.", "Время глубокого фокуса и смелых решений.", "Тишина вокруг создана для твоих планов."],
+  2: ["В два часа ночи рождаются лучшие строки.", "Ночь бережет твое вдохновение для дела.", "Пусть тихий свет экрана ведет к цели."],
+  3: ["Самый спокойный час для важных задач.", "Мир замер, чтобы ничто не отвлекало.", "Ночная прохлада освежает ход мыслей."],
+  4: ["Предрассветная тишина заряжает на результат.", "На пороге рассвета рождаются точные шаги.", "Небеса светлеют, открывая путь новым идеям."],
+  5: ["Первые лучи солнца будит жажду творить!", "С рассветом приходит свежая энергия для дел.", "Утро начинается с твоего уверенного старта."],
+  6: ["Доброе утро и легкого входа в ритм!", "Свежесть раннего утра зовет к новым свершениям.", "Пусть этот рассвет подарит ясный взгляд на задачи."],
+  7: ["Утренний свет наполняет день смыслом и силой.", "Прекрасный час, чтобы наметить главные цели.", "Доброе утро, время воплощать задуманное!"],
+  8: ["Утренний ветер приносит свежие решения.", "Бодрого утра и красивого рабочего темпа!", "День набирает высоту — самое время действовать."],
+  9: ["Пусть утренняя ясность поможет в каждом шаге.", "Доброе утро и вдохновения на весь день!", "Солнце зовет смело браться за интересные проекты."],
+  10: ["Утро в расцвете — лови волну продуктивности!", "Пусть дела складываются легко и гармонично.", "Отличный час для смелых творческих шагов."],
+  11: ["Светлое настроение помогает решать любые задачи.", "Утро плавно перетекает в уверенный рабочий поток.", "Лови вдохновение и энергию этого часа!"],
+  12: ["Солнце в зените — время ярких результатов!", "Полдень дарит ясность и силы для новых высот.", "Добрый день и гармоничного рабочего настроя!"],
+  13: ["Пусть этот дневной час принесет легкие решения.", "Самое сердце дня зовет двигаться вперед.", "Теплого привета и свежего взгляда на дела!"],
+  14: ["Спокойное течение дня помогает держать фокус.", "Добрый день, полный интересных открытий!", "Пусть удача сопровождает каждую твою идею."],
+  15: ["День сияет красками твоих новых побед.", "Душевного равновесия и точности в работе!", "Светлый час для воплощения главных планов."],
+  16: ["Золотые лучи дня вдохновляют на финальный рывок.", "Пусть все задуманное обретает четкую форму.", "Уютного и продуктивного продолжения дня!"],
+  17: ["Предвечерний свет настраивает на вдумчивый труд.", "Отличный момент, чтобы красиво оформить идеи.", "Мягкий ритм конца дня помогает довести дело до идеала."],
+  18: ["Добрый вечер и вдохновения в красках заката!", "Сумерки приносят спокойствие и глубину мыслей.", "Вечер открывает время для неспешных задач."],
+  19: ["Вечерние огни зажигают искру новых замыслов.", "Добрый вечер — пора творить без суеты!", "Уютная атмосфера помогает сосредоточиться на главном."],
+  20: ["Вечерняя прохлада освежает взгляд на проекты.", "Привет под первые звезды — самое время для идей.", "Пусть этот тихий вечер подарит ясность ума."],
+  21: ["Добрый вечер, время спокойного и глубокого фокуса!", "В тихом свете луны легко рождаются решения.", "Вечерняя тишина бережет твою концентрацию."],
+  22: ["Поздний вечер располагает к вдумчивой работе.", "Теплый свет лампы помогает навести порядок в мыслях.", "Доброго вечера и вдохновения для важных строк!"],
+  23: ["На исходе суток рождаются самые точные идеи.", "Звездный час для тех, кто увлечен своим делом.", "Тихий привет в завершении дня — я готов помочь!"]
+};
 
-    let chatHistory = [];
-    let artifacts = [];
-    let currentArtifact = null;
-    let currentMode = 'preview';
-    let isGenerating = false;
+const setG = () => {
+  const h = new Date().getHours();
+  const a = G[h] || G[12];
+  document.getElementById('greetTxt').textContent = a[Math.floor(Math.random() * a.length)];
+};
+setG();
 
-    const G = {
-      0: ["Полночь открывает чистый лист для идей.", "С новым днем и ясными мыслями!", "В звездной тишине так легко сосредоточиться."],
-      1: ["Ночной покой помогает поймать нужный ритм.", "Время глубокого фокуса и смелых решений.", "Тишина вокруг создана для твоих планов."],
-      2: ["В два часа ночи рождаются лучшие строки.", "Ночь бережет твое вдохновение для дела.", "Пусть тихий свет экрана ведет к цели."],
-      3: ["Самый спокойный час для важных задач.", "Мир замер, чтобы ничто не отвлекало.", "Ночная прохлада освежает ход мыслей."],
-      4: ["Предрассветная тишина заряжает на результат.", "На пороге рассвета рождаются точные шаги.", "Небеса светлеют, открывая путь новым идеям."],
-      5: ["Первые лучи солнца будит жажду творить!", "С рассветом приходит свежая энергия для дел.", "Утро начинается с твоего уверенного старта."],
-      6: ["Доброе утро и легкого входа в ритм!", "Свежесть раннего утра зовет к новым свершениям.", "Пусть этот рассвет подарит ясный взгляд на задачи."],
-      7: ["Утренний свет наполняет день смыслом и силой.", "Прекрасный час, чтобы наметить главные цели.", "Доброе утро, время воплощать задуманное!"],
-      8: ["Утренний ветер приносит свежие решения.", "Бодрого утра и красивого рабочего темпа!", "День набирает высоту — самое время действовать."],
-      9: ["Пусть утренняя ясность поможет в каждом шаге.", "Доброе утро и вдохновения на весь день!", "Солнце зовет смело браться за интересные проекты."],
-      10: ["Утро в расцвете — лови волну продуктивности!", "Пусть дела складываются легко и гармонично.", "Отличный час для смелых творческих шагов."],
-      11: ["Светлое настроение помогает решать любые задачи.", "Утро плавно перетекает в уверенный рабочий поток.", "Лови вдохновение и энергию этого часа!"],
-      12: ["Солнце в зените — время ярких результатов!", "Полдень дарит ясность и силы для новых высот.", "Добрый день и гармоничного рабочего настроя!"],
-      13: ["Пусть этот дневной час принесет легкие решения.", "Самое сердце дня зовет двигаться вперед.", "Теплого привета и свежего взгляда на дела!"],
-      14: ["Спокойное течение дня помогает держать фокус.", "Добрый день, полный интересных открытий!", "Пусть удача сопровождает каждую твою идею."],
-      15: ["День сияет красками твоих новых побед.", "Душевного равновесия и точности в работе!", "Светлый час для воплощения главных планов."],
-      16: ["Золотые лучи дня вдохновляют на финальный рывок.", "Пусть все задуманное обретает четкую форму.", "Уютного и продуктивного продолжения дня!"],
-      17: ["Предвечерний свет настраивает на вдумчивый труд.", "Отличный момент, чтобы красиво оформить идеи.", "Мягкий ритм конца дня помогает довести дело до идеала."],
-      18: ["Добрый вечер и вдохновения в красках заката!", "Сумерки приносят спокойствие и глубину мыслей.", "Вечер открывает время для неспешных задач."],
-      19: ["Вечерние огни зажигают искру новых замыслов.", "Добрый вечер — пора творить без суеты!", "Уютная атмосфера помогает сосредоточиться на главном."],
-      20: ["Вечерняя прохлада освежает взгляд на проекты.", "Привет под первые звезды — самое время для идей.", "Пусть этот тихий вечер подарит ясность ума."],
-      21: ["Добрый вечер, время спокойного и глубокого фокуса!", "В тихом свете луны легко рождаются решения.", "Вечерняя тишина бережет твою концентрацию."],
-      22: ["Поздний вечер располагает к вдумчивой работе.", "Теплый свет лампы помогает навести порядок в мыслях.", "Доброго вечера и вдохновения для важных строк!"],
-      23: ["На исходе суток рождаются самые точные идеи.", "Звездный час для тех, кто увлечен своим делом.", "Тихий привет в завершении дня — я готов помочь!"]
-    };
+// Переключатель темы
+const thmBtn = document.getElementById('thmBtn');
+const iSun = document.getElementById('iSun');
+const iMoon = document.getElementById('iMoon');
+const setThm = l => {
+  document.body.classList.toggle('light', l);
+  iSun.style.display = l ? 'none' : 'block';
+  iMoon.style.display = l ? 'block' : 'none';
+};
+if (localStorage.getItem('x_thm') === 'light') setThm(true);
+thmBtn.onclick = () => {
+  const l = !document.body.classList.contains('light');
+  setThm(l);
+  localStorage.setItem('x_thm', l ? 'light' : 'dark');
+};
 
-    const setG = () => {
-      const h = new Date().getHours();
-      const a = G[h] || G[12];
-      document.getElementById('greetTxt').textContent = a[Math.floor(Math.random() * a.length)];
-    };
-    setG();
+// Логика левой панели (выдвижение ТОЛЬКО при наведении на символ "l l", фиксация по клику, ресайз 10%-20%)
+const sb = document.getElementById('sb');
+const trig = document.getElementById('trig');
+const main = document.getElementById('main');
+const resizer = document.getElementById('resizer');
 
-    const thmBtn = document.getElementById('thmBtn');
-    const iSun = document.getElementById('iSun');
-    const iMoon = document.getElementById('iMoon');
-    const setThm = l => {
-      document.body.classList.toggle('light', l);
-      iSun.style.display = l ? 'none' : 'block';
-      iMoon.style.display = l ? 'block' : 'none';
-    };
-    if (localStorage.getItem('x_thm') === 'light') setThm(true);
-    thmBtn.onclick = () => {
-      const l = !document.body.classList.contains('light');
-      setThm(l);
-      localStorage.setItem('x_thm', l ? 'light' : 'dark');
-    };
+let pin = false;
+let isResizing = false;
+let sbPct = parseFloat(localStorage.getItem('x_sb_pct')) || 15;
 
-    const sb = document.getElementById('sb');
-    const trig = document.getElementById('trig');
-    const workspace = document.getElementById('workspace');
-    const main = document.getElementById('main');
-    const resizer = document.getElementById('resizer');
+function applySbWidth() {
+  sbPct = Math.min(20, Math.max(10, sbPct));
+  const px = Math.round(window.innerWidth * (sbPct / 100));
+  sb.style.width = px + 'px';
+  main.style.marginLeft = (pin && window.innerWidth > 640) ? (px + 'px') : '0px';
+}
 
-    let pin = false;
-    let isResizingSb = false;
-    let sbPct = parseFloat(localStorage.getItem('x_sb_pct')) || 15;
+applySbWidth();
+window.addEventListener('resize', applySbWidth);
 
-    function applySbWidth() {
-      sbPct = Math.min(20, Math.max(10, sbPct));
-      const px = Math.round(window.innerWidth * (sbPct / 100));
-      sb.style.width = px + 'px';
-      workspace.style.marginLeft = (pin && window.innerWidth > 640) ? (px + 'px') : '0px';
-    }
+// Выдвигается только при наведении на кликабельную область "l l"
+trig.onmouseenter = () => {
+  sb.classList.add('open');
+};
 
+sb.onmouseleave = () => {
+  if (!pin && !isResizing) {
+    sb.classList.remove('open');
+  }
+};
+
+function closePinnedSidebar() {
+  pin = false;
+  sb.classList.remove('open');
+  trig.classList.remove('pin');
+  document.body.classList.remove('pinned');
+  main.style.marginLeft = '0px';
+}
+
+trig.onclick = () => {
+  if (pin) {
+    closePinnedSidebar();
+  } else {
+    pin = true;
+    sb.classList.add('open');
+    trig.classList.add('pin');
+    document.body.classList.add('pinned');
     applySbWidth();
-    window.addEventListener('resize', applySbWidth);
+  }
+};
 
-    trig.onmouseenter = () => {
-      sb.classList.add('open');
-    };
+// Регулировка ширины (от 10% до 20%) и закрытие при протаскивании левее 50% от мин. ширины (5%)
+resizer.addEventListener('mousedown', (e) => {
+  if (!pin) return;
+  e.preventDefault();
+  isResizing = true;
+  document.body.classList.add('resizing');
+  sb.classList.add('no-trans');
+  main.classList.add('no-trans');
+});
 
-    sb.onmouseleave = () => {
-      if (!pin && !isResizingSb) {
-        sb.classList.remove('open');
-      }
-    };
+window.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const rawPct = (e.clientX / window.innerWidth) * 100;
 
-    function closePinnedSidebar() {
-      pin = false;
-      sb.classList.remove('open');
-      trig.classList.remove('pin');
-      document.body.classList.remove('pinned');
-      workspace.style.marginLeft = '0px';
-    }
+  if (rawPct < 5) {
+    isResizing = false;
+    document.body.classList.remove('resizing');
+    sb.classList.remove('no-trans');
+    main.classList.remove('no-trans');
+    closePinnedSidebar();
+    return;
+  }
 
-    trig.onclick = () => {
-      if (pin) {
-        closePinnedSidebar();
-      } else {
-        pin = true;
-        sb.classList.add('open');
-        trig.classList.add('pin');
-        document.body.classList.add('pinned');
-        applySbWidth();
-      }
-    };
+  sbPct = Math.min(20, Math.max(10, rawPct));
+  localStorage.setItem('x_sb_pct', sbPct.toFixed(2));
+  applySbWidth();
+});
 
-    resizer.addEventListener('mousedown', (e) => {
-      if (!pin) return;
-      e.preventDefault();
-      isResizingSb = true;
-      document.body.classList.add('resizing');
-      sb.classList.add('no-trans');
-      workspace.classList.add('no-trans');
-    });
+window.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  isResizing = false;
+  document.body.classList.remove('resizing');
+  sb.classList.remove('no-trans');
+  main.classList.remove('no-trans');
+});
 
-    const artPane = document.getElementById('artPane');
-    const artResizer = document.getElementById('artResizer');
-    const artReopenBtn = document.getElementById('artReopenBtn');
-    const artPaneName = document.getElementById('artPaneName');
-    const artBody = document.getElementById('artBody');
-    const artTabs = document.getElementById('artTabs');
-    const tabPreview = document.getElementById('tabPreview');
-    const tabCode = document.getElementById('tabCode');
+// Прикрепление файлов и кнопка "^"
+const inp = document.getElementById('inp');
+const sndBtn = document.getElementById('sndBtn');
+const attBtn = document.getElementById('attBtn');
+const fInp = document.getElementById('fInp');
+const filesBox = document.getElementById('filesBox');
+let files = [];
 
-    let isResizingArt = false;
-    let artPct = parseFloat(localStorage.getItem('x_art_pct')) || 48;
+const updBtn = () => sndBtn.classList.toggle('vis', inp.value.length > 0 || files.length > 0);
+attBtn.onclick = () => fInp.click();
+fInp.onchange = e => {
+  files = files.concat(Array.from(e.target.files));
+  renderF();
+  updBtn();
+  fInp.value = '';
+};
 
-    function applyArtWidth() {
-      artPct = Math.min(75, Math.max(25, artPct));
-      if (artPane.classList.contains('open')) {
-        artPane.style.width = artPct + '%';
-      } else {
-        artPane.style.width = '0px';
-      }
-    }
-
-    artResizer.addEventListener('mousedown', (e) => {
-      if (!artPane.classList.contains('open')) return;
-      e.preventDefault();
-      isResizingArt = true;
-      document.body.classList.add('resizing');
-      artPane.classList.add('no-trans');
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (isResizingSb) {
-        const rawPct = (e.clientX / window.innerWidth) * 100;
-        if (rawPct < 5) {
-          isResizingSb = false;
-          document.body.classList.remove('resizing');
-          sb.classList.remove('no-trans');
-          workspace.classList.remove('no-trans');
-          closePinnedSidebar();
-          return;
-        }
-        sbPct = Math.min(20, Math.max(10, rawPct));
-        localStorage.setItem('x_sb_pct', sbPct.toFixed(2));
-        applySbWidth();
-      }
-
-      if (isResizingArt) {
-        const wsRect = workspace.getBoundingClientRect();
-        const rightWidth = wsRect.right - e.clientX;
-        const rawArtPct = (rightWidth / wsRect.width) * 100;
-        artPct = Math.min(75, Math.max(25, rawArtPct));
-        localStorage.setItem('x_art_pct', artPct.toFixed(2));
-        applyArtWidth();
-      }
-    });
-
-    window.addEventListener('mouseup', () => {
-      if (isResizingSb) {
-        isResizingSb = false;
-        document.body.classList.remove('resizing');
-        sb.classList.remove('no-trans');
-        workspace.classList.remove('no-trans');
-      }
-      if (isResizingArt) {
-        isResizingArt = false;
-        document.body.classList.remove('resizing');
-        artPane.classList.remove('no-trans');
-      }
-    });
-
-    function downloadArtifact(art) {
-      const blob = new Blob([art.content], { type: 'text/plain;charset=utf-8' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = art.filename;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
-
-    function renderArtifactPane() {
-      if (!currentArtifact) return;
-      artPaneName.textContent = currentArtifact.filename;
-      const isHtml = /\.(html|htm|svg)$/i.test(currentArtifact.filename);
-
-      artTabs.style.display = isHtml ? 'flex' : 'none';
-      if (!isHtml) currentMode = 'code';
-
-      tabPreview.classList.toggle('active', currentMode === 'preview');
-      tabCode.classList.toggle('active', currentMode === 'code');
-
-      artBody.innerHTML = '';
-      if (isHtml && currentMode === 'preview') {
-        const iframe = document.createElement('iframe');
-        iframe.className = 'art-preview-frame';
-        iframe.setAttribute('sandbox', 'allow-scripts');
-        iframe.srcdoc = currentArtifact.content;
-        artBody.appendChild(iframe);
-      } else {
-        const pre = document.createElement('div');
-        pre.className = 'art-code-view';
-        pre.textContent = currentArtifact.content;
-        artBody.appendChild(pre);
-      }
-    }
-
-    function openArtifact(art, autoPreview = true) {
-      currentArtifact = art;
-      if (autoPreview) {
-        currentMode = /\.(html|htm|svg)$/i.test(art.filename) ? 'preview' : 'code';
-      }
-      artPane.classList.add('open');
-      artReopenBtn.classList.remove('vis');
-      applyArtWidth();
-      document.querySelectorAll('.art-card').forEach(el => {
-        el.classList.toggle('active', el.dataset.id === art.id);
-      });
-      renderArtifactPane();
-    }
-
-    function closeArtifactPane() {
-      artPane.classList.remove('open');
-      applyArtWidth();
-      document.querySelectorAll('.art-card').forEach(el => el.classList.remove('active'));
-      if (currentArtifact) {
-        artReopenBtn.classList.add('vis');
-      }
-    }
-
-    artReopenBtn.onclick = () => {
-      if (currentArtifact) {
-        openArtifact(currentArtifact, true);
-      }
-    };
-
-    tabPreview.onclick = () => {
-      currentMode = 'preview';
-      renderArtifactPane();
-    };
-
-    tabCode.onclick = () => {
-      currentMode = 'code';
-      renderArtifactPane();
-    };
-
-    document.getElementById('btnCloseArt').onclick = closeArtifactPane;
-    document.getElementById('btnDlArt').onclick = () => {
-      if (currentArtifact) downloadArtifact(currentArtifact);
-    };
-    document.getElementById('btnCopyArt').onclick = () => {
-      if (!currentArtifact) return;
-      navigator.clipboard.writeText(currentArtifact.content);
-      const btn = document.getElementById('btnCopyArt');
-      btn.style.color = '#4ade80';
-      setTimeout(() => btn.style.color = '', 1000);
-    };
-
-    const inp = document.getElementById('inp');
-    const sndBtn = document.getElementById('sndBtn');
-    const attBtn = document.getElementById('attBtn');
-    const fInp = document.getElementById('fInp');
-    const filesBox = document.getElementById('filesBox');
-    let files = [];
-
-    const updBtn = () => sndBtn.classList.toggle('vis', inp.value.trim().length > 0 || files.length > 0);
-    attBtn.onclick = () => fInp.click();
-    fInp.onchange = e => {
-      files = files.concat(Array.from(e.target.files));
+function renderF() {
+  filesBox.innerHTML = '';
+  filesBox.classList.toggle('show', files.length > 0);
+  files.forEach((f, i) => {
+    const d = document.createElement('div');
+    d.className = 'chip';
+    d.innerHTML = `<span>${f.name}</span><button type="button">&times;</button>`;
+    d.querySelector('button').onclick = () => {
+      files.splice(i, 1);
       renderF();
       updBtn();
-      fInp.value = '';
     };
+    filesBox.appendChild(d);
+  });
+}
 
-    function renderF() {
-      filesBox.innerHTML = '';
-      filesBox.classList.toggle('show', files.length > 0);
-      files.forEach((f, i) => {
-        const d = document.createElement('div');
-        d.className = 'chip';
-        d.innerHTML = `<span>${f.name}</span><button type="button">&times;</button>`;
-        d.querySelector('button').onclick = () => {
-          files.splice(i, 1);
-          renderF();
-          updBtn();
-        };
-        filesBox.appendChild(d);
-      });
-    }
+// Посимвольная печать ответа
+const msgs = document.getElementById('msgs');
+const greetBox = document.getElementById('greetBox');
+let activeTypeTimer = null;
 
-    inp.oninput = function() {
-      this.style.height = 'auto';
-      this.style.height = this.scrollHeight + 'px';
-      updBtn();
-    };
+function streamAiMessage(text) {
+  const a = document.createElement('div');
+  a.className = 'msg ai';
+  msgs.appendChild(a);
 
-    const msgs = document.getElementById('msgs');
-    const greetBox = document.getElementById('greetBox');
+  let idx = 0;
+  if (activeTypeTimer) clearInterval(activeTypeTimer);
 
-    function stripThinking(raw) {
-      let text = raw;
-      if (text.includes('<think>')) {
-        if (text.includes('</think>')) {
-          text = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-        } else {
-          return { thinking: true, clean: '' };
-        }
-      }
-      if (/^\s*Thinking Process:/i.test(text)) {
-        const finalMatch = text.match(/(?:Final choice:|Final Answer:|Final Response:|Ответ:)\s*([\s\S]*)$/i);
-        if (finalMatch) {
-          text = finalMatch[1].trim();
-        } else {
-          return { thinking: true, clean: '' };
-        }
-      }
-      return { thinking: false, clean: text };
-    }
-
-    function renderAiContent(container, rawText, artObj) {
-      const { thinking, clean } = stripThinking(rawText);
-
-      if (thinking) {
-        container.innerHTML = '<span class="thinking-badge">Думаю...</span>';
-        return;
-      }
-
-      const text = clean || '...';
-      const fileMatch = text.match(/```file:([^
-]+)?
-([\s\S]*?)(?:```|$)/);
-
-      if (!fileMatch) {
-        container.textContent = text;
-        return;
-      }
-
-      const filename = fileMatch[1].trim();
-      const codeContent = fileMatch[2].trim();
-
-      artObj.filename = filename;
-      artObj.title = filename;
-      artObj.content = codeContent;
-
-      const beforeText = text.slice(0, fileMatch.index).trim();
-      const afterIdx = fileMatch.index + fileMatch[0].length;
-      const afterText = text.slice(fileMatch.index).includes('```', 7) ? text.slice(afterIdx).trim() : '';
-
-      container.innerHTML = '';
-      if (beforeText) {
-        const p1 = document.createElement('div');
-        p1.textContent = beforeText;
-        container.appendChild(p1);
-      }
-
-      const ext = artObj.filename.split('.').pop() || 'FILE';
-      const card = document.createElement('div');
-      card.className = 'art-card active';
-      card.dataset.id = artObj.id;
-      card.innerHTML = `
-        <div class="art-card-left">
-          <div class="art-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-            </svg>
-          </div>
-          <div class="art-meta">
-            <div class="art-title">${artObj.filename}</div>
-            <div class="art-ext">${ext} · Открыть</div>
-          </div>
-        </div>
-        <button type="button" class="art-dl-mini" title="Скачать">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-        </button>
-      `;
-
-      card.onclick = (e) => {
-        if (e.target.closest('.art-dl-mini')) {
-          e.stopPropagation();
-          downloadArtifact(artObj);
-          return;
-        }
-        openArtifact(artObj, true);
-      };
-
-      container.appendChild(card);
-
-      if (afterText) {
-        const p2 = document.createElement('div');
-        p2.style.marginTop = '8px';
-        p2.textContent = afterText;
-        container.appendChild(p2);
-      }
-
-      openArtifact(artObj, false);
-    }
-
-    async function readAttachedFiles(fileList) {
-      let attachedText = '';
-      for (const f of fileList) {
-        try {
-          const txt = await f.text();
-          attachedText += `
-
---- Файл: ${f.name} ---
-${txt.slice(0, 15000)}`;
-        } catch (e) {}
-      }
-      return attachedText;
-    }
-
-    async function send() {
-      if (isGenerating) return;
-      const t = inp.value.trim();
-      if (!t && !files.length) return;
-
-      isGenerating = true;
-      sndBtn.disabled = true;
-
-      greetBox.style.display = 'none';
-      msgs.classList.add('active');
-      main.classList.add('started');
-
-      const attachedContent = await readAttachedFiles(files);
-      const displayUserText = t + (files.length ? `
-[Прикреплено: ${files.map(f => f.name).join(', ')}]` : '');
-      const fullPromptForAi = (t || 'Проанализируй прикреплённые файлы.') + attachedContent;
-
-      const u = document.createElement('div');
-      u.className = 'msg user';
-      u.textContent = displayUserText;
-      msgs.appendChild(u);
-
-      const aiDiv = document.createElement('div');
-      aiDiv.className = 'msg ai';
-      aiDiv.innerHTML = '<span class="thinking-badge">Думаю...</span>';
-      msgs.appendChild(aiDiv);
+  activeTypeTimer = setInterval(() => {
+    if (idx < text.length) {
+      const span = document.createElement('span');
+      span.className = 'char-fade';
+      span.textContent = text[idx];
+      a.appendChild(span);
+      idx++;
       msgs.scrollTop = msgs.scrollHeight;
-
-      inp.value = '';
-      inp.style.height = 'auto';
-      files = [];
-      renderF();
-      updBtn();
-
-      const artObj = {
-        id: 'art_' + Date.now(),
-        filename: 'document.txt',
-        title: 'document.txt',
-        content: ''
-      };
-
-      try {
-        const gistRes = await fetch(`${GIST_RAW_URL}?t=${Date.now()}`);
-        const gistData = await gistRes.json();
-        if (!gistData.url) throw new Error('Сервер Kaggle сейчас не запущен.');
-
-        const response = await fetch(`${gistData.url}/v1/chat/completions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [
-              { role: 'system', content: SYSTEM_PROMPT },
-              ...chatHistory,
-              { role: 'user', content: fullPromptForAi }
-            ],
-            temperature: 0.7,
-            max_tokens: 4096,
-            stream: true
-          })
-        });
-
-        if (!response.ok) throw new Error(`Ошибка сервера (${response.status})`);
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let fullResponse = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('
-');
-
-          for (const line of lines) {
-            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-              try {
-                const json = JSON.parse(line.slice(6));
-                const delta = json.choices?.[0]?.delta?.content;
-                if (delta) {
-                  fullResponse += delta;
-                  renderAiContent(aiDiv, fullResponse, artObj);
-                  msgs.scrollTop = msgs.scrollHeight;
-                }
-              } catch (e) {}
-            }
-          }
-        }
-
-        const { clean } = stripThinking(fullResponse);
-        if (artObj.content) {
-          artifacts.push(artObj);
-          openArtifact(artObj, true);
-        }
-
-        chatHistory.push({ role: 'user', content: fullPromptForAi });
-        chatHistory.push({ role: 'assistant', content: clean || fullResponse });
-
-      } catch (err) {
-        aiDiv.textContent = 'Не удалось подключиться к Ксенону: сервер в Kaggle сейчас спит или перезагружается.';
-      } finally {
-        isGenerating = false;
-        sndBtn.disabled = false;
-      }
+    } else {
+      clearInterval(activeTypeTimer);
+      activeTypeTimer = null;
     }
+  }, 16);
+}
 
-    sndBtn.onclick = send;
-    inp.onkeydown = e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        send();
-      }
-    };
+inp.oninput = function() {
+  this.style.height = 'auto';
+  this.style.height = this.scrollHeight + 'px';
+  updBtn();
+};
 
-    document.getElementById('newBtn').onclick = () => {
-      chatHistory = [];
-      artifacts = [];
-      currentArtifact = null;
-      artPane.classList.remove('open');
-      artReopenBtn.classList.remove('vis');
-      applyArtWidth();
-      msgs.innerHTML = '';
-      msgs.classList.remove('active');
-      main.classList.remove('started');
-      greetBox.style.display = 'flex';
-      inp.value = '';
-      inp.style.height = 'auto';
-      files = [];
-      renderF();
-      updBtn();
-      setG();
-    };
-  </script>
+function send() {
+  const t = inp.value;
+  if (!t.trim() && !files.length) return;
+
+  greetBox.style.display = 'none';
+  msgs.classList.add('active');
+  main.classList.add('started');
+
+  const u = document.createElement('div');
+  u.className = 'msg user';
+  u.textContent = t.trim() + (files.length ? `
+[Файлы: ${files.map(f => f.name).join(', ')}]` : '');
+  msgs.appendChild(u);
+
+  streamAiMessage('Интерфейс готов к работе. Подключите API-ключ для запуска агентов.');
+
+  inp.value = '';
+  inp.style.height = 'auto';
+  files = [];
+  renderF();
+  updBtn();
+}
+
+sndBtn.onclick = send;
+inp.onkeydown = e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    send();
+  }
+};
+
+document.getElementById('newBtn').onclick = () => {
+  if (activeTypeTimer) clearInterval(activeTypeTimer);
+  msgs.innerHTML = '';
+  msgs.classList.remove('active');
+  main.classList.remove('started');
+  greetBox.style.display = 'flex';
+  inp.value = '';
+  inp.style.height = 'auto';
+  files = [];
+  renderF();
+  updBtn();
+  setG();
+};
+</script>
 </body>
 </html>
